@@ -7,8 +7,6 @@ const nextConfig = {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
   serverExternalPackages: ['@supabase/ssr', '@supabase/supabase-js'],
-  // Deaktiviere Build-Tracing für Vercel-Kompatibilität
-  output: 'standalone',
   webpack: (config, { isServer, dev }) => {
     if (!isServer) {
       config.resolve.fallback = {
