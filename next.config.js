@@ -7,17 +7,6 @@ const nextConfig = {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
   serverExternalPackages: ['@supabase/ssr', '@supabase/supabase-js'],
-  // Deaktiviere Turbopack für bessere Kompatibilität
-  experimental: {
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
-      },
-    },
-  },
   webpack: (config, { isServer, dev }) => {
     if (!isServer) {
       config.resolve.fallback = {
