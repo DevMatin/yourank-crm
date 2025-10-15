@@ -6,13 +6,17 @@ const nextConfig = {
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
-  serverExternalPackages: ['@supabase/ssr'],
-  // Stelle sicher, dass alle Seiten korrekt generiert werden
-  output: 'standalone',
-  // Optimiere Cache-Performance
+  serverExternalPackages: ['@supabase/ssr', '@supabase/supabase-js'],
+  // Deaktiviere Turbopack für bessere Kompatibilität
   experimental: {
-    // Entfernt cacheMaxMemorySize da es in Next.js 15 nicht mehr unterstützt wird
-    serverComponentsExternalPackages: ['@supabase/supabase-js'],
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+    },
   },
   webpack: (config, { isServer, dev }) => {
     if (!isServer) {
