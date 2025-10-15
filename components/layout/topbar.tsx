@@ -26,33 +26,42 @@ export function Topbar() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      
-      if (authUser) {
-        const { data: userData } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', authUser.id)
-          .single();
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
         
-        setUser(userData);
+        if (authUser) {
+          const { data: userData } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', authUser.id)
+            .single();
+          
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error('Fehler beim Laden des Benutzers:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     getUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'SIGNED_OUT' || !session) {
-          router.push('/login');
-        } else if (session.user) {
-          const { data: userData } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          setUser(userData);
+        try {
+          if (event === 'SIGNED_OUT' || !session) {
+            router.push('/login');
+          } else if (session.user) {
+            const { data: userData } = await supabase
+              .from('users')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+            setUser(userData);
+          }
+        } catch (error) {
+          console.error('Fehler bei Auth State Change:', error);
         }
       }
     );
@@ -61,7 +70,13 @@ export function Topbar() {
   }, [router]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Fehler beim Abmelden:', error);
+      // Trotzdem zur Login-Seite weiterleiten
+      router.push('/login');
+    }
   };
 
   if (loading) {

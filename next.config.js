@@ -7,10 +7,12 @@ const nextConfig = {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
   serverExternalPackages: ['@supabase/ssr'],
+  // Stelle sicher, dass alle Seiten korrekt generiert werden
+  output: 'standalone',
   // Optimiere Cache-Performance
   experimental: {
-    // Reduziere Cache-Größe für bessere Performance
-    cacheMaxMemorySize: 50 * 1024 * 1024, // 50MB statt Standard
+    // Entfernt cacheMaxMemorySize da es in Next.js 15 nicht mehr unterstützt wird
+    serverComponentsExternalPackages: ['@supabase/supabase-js'],
   },
   webpack: (config, { isServer, dev }) => {
     if (!isServer) {
