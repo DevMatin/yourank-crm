@@ -28,11 +28,15 @@ const nextConfig = {
       '@supabase/realtime-js': false,
     };
     
-    // Behebe RealtimeClient Konstruktor Probleme
-    config.externals = {
-      ...config.externals,
-      '@supabase/realtime-js': 'commonjs @supabase/realtime-js',
-    };
+    // Behebe RealtimeClient Konstruktor Probleme - einfachere Lösung
+    if (!isServer) {
+      config.externals = config.externals || [];
+      if (Array.isArray(config.externals)) {
+        config.externals.push('@supabase/realtime-js');
+      } else {
+        config.externals = [config.externals, '@supabase/realtime-js'];
+      }
+    }
     
     // Optimiere Webpack Cache für bessere Performance
     if (dev) {
