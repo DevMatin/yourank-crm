@@ -6,7 +6,9 @@ const nextConfig = {
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
-  serverExternalPackages: ['@supabase/ssr', '@supabase/supabase-js'],
+  experimental: {
+    serverComponentsExternalPackages: ['@supabase/ssr', '@supabase/supabase-js'],
+  },
   webpack: (config, { isServer, dev }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -14,8 +16,19 @@ const nextConfig = {
         fs: false,
         net: false,
         tls: false,
+        crypto: false,
+        stream: false,
+        util: false,
+        buffer: false,
+        process: false,
       };
     }
+    
+    // Supabase-spezifische Webpack-Konfiguration für Edge Runtime
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@supabase/realtime-js': false,
+    };
     
     // Optimiere Webpack Cache für bessere Performance
     if (dev) {

@@ -11,6 +11,7 @@ export async function middleware(req: NextRequest) {
   });
 
   try {
+    // Edge Runtime kompatible Supabase Client-Konfiguration
     const supabase = createServerClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -28,17 +29,33 @@ export async function middleware(req: NextRequest) {
             res.cookies.set(name, '', options);
           },
         },
-        // Edge Runtime kompatible Konfiguration
+        // Edge Runtime spezifische Konfiguration
         global: {
           fetch: fetch,
+        },
+        // Deaktiviere Realtime für Edge Runtime
+        realtime: {
+          enabled: false,
         },
       }
     );
 
-    // Use getUser() instead of getSession() for better security
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    // Verwende eine einfachere Authentifizierungsprüfung für Edge Runtime
+    const authHeader = req.headers.get('authorization');
+    const cookieHeader = req.headers.get('cookie');
+    
+    let user = null;
+    
+    // Versuche User aus Cookie zu extrahieren (vereinfachte Methode für Edge Runtime)
+    if (cookieHeader) {
+      try {
+        const { data: { user: userData } } = await supabase.auth.getUser();
+        user = userData;
+      } catch (error) {
+        // Bei Fehlern in Edge Runtime einfach null setzen
+        user = null;
+      }
+    }
 
     // Debug logging basierend auf Environment-Variablen
     const debugMiddleware = process.env.DEBUG_MIDDLEWARE === 'true';
@@ -52,7 +69,7 @@ export async function middleware(req: NextRequest) {
                        req.nextUrl.pathname.startsWith('/dashboard');
       
       if (shouldLog) {
-        console.log('🔍 Middleware - Path:', req.nextUrl.pathname, 'User exists:', !!user, 'User ID:', user?.id);
+        console.log('🔍 Edge Middleware - Path:', req.nextUrl.pathname, 'User exists:', !!user, 'User ID:', user?.id);
       }
     }
 
@@ -70,7 +87,7 @@ export async function middleware(req: NextRequest) {
 
     return res;
   } catch (error) {
-    console.error('Middleware error:', error);
+    console.error('Edge Middleware error:', error);
     // Bei Fehlern einfach weiterleiten ohne Authentifizierung
     return res;
   }
@@ -78,5 +95,5 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
-  runtime: 'edge', // Verwende Edge Runtime für bessere Performance und Kompatibilität
+  runtime: 'edge',
 };
