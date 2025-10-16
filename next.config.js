@@ -26,7 +26,17 @@ const nextConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@supabase/realtime-js': false,
+      '@supabase/supabase-js': false,
     };
+    
+    // Externe Module für Edge Runtime
+    config.externals = config.externals || [];
+    if (Array.isArray(config.externals)) {
+      config.externals.push({
+        '@supabase/realtime-js': 'commonjs @supabase/realtime-js',
+        '@supabase/supabase-js': 'commonjs @supabase/supabase-js',
+      });
+    }
     
     // Entferne problematische externals Konfiguration
     // Die alias Konfiguration oben sollte ausreichen

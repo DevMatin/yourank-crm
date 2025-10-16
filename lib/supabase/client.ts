@@ -34,6 +34,10 @@ export const createClient = () => {
           autoRefreshToken: true,
           detectSessionInUrl: true,
         },
+        realtime: {
+          // Deaktiviere Realtime für bessere Kompatibilität
+          enabled: false,
+        },
         global: {
           fetch: fetch,
         },
@@ -43,4 +47,5 @@ export const createClient = () => {
   return supabaseClient;
 };
 
-export const supabase = createClient();
+// Exportiere nur die createClient Funktion, nicht eine bereits initialisierte Instanz
+// Das verhindert mehrfache Instanzen beim Import

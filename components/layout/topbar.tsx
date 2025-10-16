@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { CreditBadge } from '@/components/dashboard/credit-badge';
 import { Button } from '@/components/ui/button';
 import { 
@@ -36,11 +36,7 @@ export function Topbar() {
   useEffect(() => {
     const getUser = async () => {
       try {
-        if (!supabase) {
-          console.error('Supabase client not initialized');
-          return;
-        }
-        
+        const supabase = createClient();
         const { data: { user: authUser } } = await supabase.auth.getUser();
         
         if (authUser) {
@@ -69,11 +65,7 @@ export function Topbar() {
 
     getUser();
 
-    if (!supabase) {
-      console.error('Supabase client not initialized');
-      return;
-    }
-
+    const supabase = createClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: any, session: any) => {
         try {
@@ -107,12 +99,7 @@ export function Topbar() {
 
   const handleSignOut = async () => {
     try {
-      if (!supabase) {
-        console.error('Supabase client not initialized');
-        router.push('/login');
-        return;
-      }
-      
+      const supabase = createClient();
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Fehler beim Abmelden:', error);
