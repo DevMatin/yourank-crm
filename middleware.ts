@@ -1,1 +1,1 @@
-export { middleware } from '@/lib/supabase/edge-middleware';
+export { middleware } from '@/lib/supabase/simple-middleware';
