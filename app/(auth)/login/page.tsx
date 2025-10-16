@@ -23,6 +23,10 @@ export default function LoginPage() {
     setError('');
 
     try {
+      if (!supabase) {
+        throw new Error('Supabase client not initialized');
+      }
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,

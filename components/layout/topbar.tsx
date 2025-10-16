@@ -36,6 +36,11 @@ export function Topbar() {
   useEffect(() => {
     const getUser = async () => {
       try {
+        if (!supabase) {
+          console.error('Supabase client not initialized');
+          return;
+        }
+        
         const { data: { user: authUser } } = await supabase.auth.getUser();
         
         if (authUser) {
@@ -64,12 +69,17 @@ export function Topbar() {
 
     getUser();
 
+    if (!supabase) {
+      console.error('Supabase client not initialized');
+      return;
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         try {
           if (event === 'SIGNED_OUT' || !session) {
             router.push('/login');
-          } else if (session.user) {
+          } else if (session.user && supabase) {
             try {
               const { data: userData, error } = await supabase
                 .from('users')
@@ -97,6 +107,12 @@ export function Topbar() {
 
   const handleSignOut = async () => {
     try {
+      if (!supabase) {
+        console.error('Supabase client not initialized');
+        router.push('/login');
+        return;
+      }
+      
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Fehler beim Abmelden:', error);
