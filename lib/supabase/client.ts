@@ -1,9 +1,8 @@
 import { createBrowserClient } from '@supabase/ssr';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
-let supabaseClient: SupabaseClient | null = null;
+let supabaseClient: any = null;
 
-export function createClient(): SupabaseClient {
+export function createClient() {
   // Singleton pattern to prevent multiple instances
   if (!supabaseClient) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -14,7 +13,7 @@ export function createClient(): SupabaseClient {
     }
 
     try {
-      // Minimale Konfiguration ohne problematische Module
+      // Einfache Konfiguration ohne komplexe Typisierung
       supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey, {
         cookies: {
           get(name: string) {
@@ -40,18 +39,6 @@ export function createClient(): SupabaseClient {
           persistSession: true,
           autoRefreshToken: true,
           detectSessionInUrl: true,
-        },
-        // Deaktiviere Realtime komplett
-        realtime: {
-          disabled: true,
-        },
-        // Minimale globale Konfiguration
-        global: {
-          fetch: fetch,
-        },
-        // Deaktiviere weitere problematische Features
-        db: {
-          schema: 'public',
         },
       });
     } catch (error) {
