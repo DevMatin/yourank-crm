@@ -19,6 +19,24 @@ const nextConfig = {
         util: false,
         buffer: false,
         process: false,
+        path: false,
+        os: false,
+        http: false,
+        https: false,
+        zlib: false,
+        querystring: false,
+        url: false,
+        assert: false,
+        constants: false,
+        _stream_duplex: false,
+        _stream_passthrough: false,
+        _stream_readable: false,
+        _stream_transform: false,
+        _stream_writable: false,
+        timers: false,
+        console: false,
+        vm: false,
+        punycode: false,
       };
     }
     
@@ -28,6 +46,22 @@ const nextConfig = {
       '@supabase/realtime-js': false,
       '@supabase/supabase-js': false,
     };
+    
+    // Behebe require() Probleme im Browser
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'require': false,
+    };
+    
+    // Stelle sicher, dass keine Node.js Module im Browser verwendet werden
+    const webpack = require('webpack');
+    config.plugins = config.plugins || [];
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+        'global': 'globalThis',
+      })
+    );
     
     // Externe Module für Edge Runtime
     config.externals = config.externals || [];
