@@ -15,11 +15,7 @@ export const createClient = () => {
           autoRefreshToken: true,
           detectSessionInUrl: true,
         },
-        realtime: {
-          params: {
-            eventsPerSecond: 10,
-          },
-        },
+        // Vereinfachte Konfiguration für bessere Kompatibilität
         global: {
           fetch: fetch,
         },

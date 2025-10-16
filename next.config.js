@@ -28,15 +28,8 @@ const nextConfig = {
       '@supabase/realtime-js': false,
     };
     
-    // Behebe RealtimeClient Konstruktor Probleme - einfachere Lösung
-    if (!isServer) {
-      config.externals = config.externals || [];
-      if (Array.isArray(config.externals)) {
-        config.externals.push('@supabase/realtime-js');
-      } else {
-        config.externals = [config.externals, '@supabase/realtime-js'];
-      }
-    }
+    // Entferne problematische externals Konfiguration
+    // Die alias Konfiguration oben sollte ausreichen
     
     // Optimiere Webpack Cache für bessere Performance
     if (dev) {
