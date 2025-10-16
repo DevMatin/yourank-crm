@@ -6,9 +6,7 @@ const nextConfig = {
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
-  experimental: {
-    serverComponentsExternalPackages: ['@supabase/ssr', '@supabase/supabase-js'],
-  },
+  serverExternalPackages: ['@supabase/ssr', '@supabase/supabase-js'],
   webpack: (config, { isServer, dev }) => {
     if (!isServer) {
       config.resolve.fallback = {

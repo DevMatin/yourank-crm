@@ -37,6 +37,12 @@ export async function middleware(req: NextRequest) {
         realtime: {
           enabled: false,
         },
+        // Edge Runtime kompatible Auth-Konfiguration
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
+        },
       }
     );
 

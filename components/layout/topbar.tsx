@@ -16,7 +16,9 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
 import { Moon, Sun, LogOut, User, Settings } from 'lucide-react';
-import { User as UserType } from '@/types/analysis';
+import { Database } from '@/types/database';
+
+type UserType = Database['public']['Tables']['users']['Row'];
 
 export function Topbar() {
   const [user, setUser] = useState<UserType | null>(null);
@@ -30,13 +32,17 @@ export function Topbar() {
         const { data: { user: authUser } } = await supabase.auth.getUser();
         
         if (authUser) {
-          const { data: userData } = await supabase
+          const { data: userData, error } = await supabase
             .from('users')
             .select('*')
             .eq('id', authUser.id)
             .single();
           
-          setUser(userData);
+          if (error) {
+            console.error('Fehler beim Laden der Benutzerdaten:', error);
+          } else {
+            setUser(userData);
+          }
         }
       } catch (error) {
         console.error('Fehler beim Laden des Benutzers:', error);
@@ -53,12 +59,17 @@ export function Topbar() {
           if (event === 'SIGNED_OUT' || !session) {
             router.push('/login');
           } else if (session.user) {
-            const { data: userData } = await supabase
+            const { data: userData, error } = await supabase
               .from('users')
               .select('*')
               .eq('id', session.user.id)
               .single();
-            setUser(userData);
+            
+            if (error) {
+              console.error('Fehler beim Laden der Benutzerdaten:', error);
+            } else {
+              setUser(userData);
+            }
           }
         } catch (error) {
           console.error('Fehler bei Auth State Change:', error);
