@@ -36,7 +36,6 @@ const nextConfig = {
       config.resolve.alias = {
         ...config.resolve.alias,
         '@supabase/realtime-js': false,
-        '@supabase/supabase-js': false,
         'require': false,
         'module': false,
         'exports': false,
