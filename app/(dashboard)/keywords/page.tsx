@@ -1,3 +1,5 @@
+'use client';
+
 import { getModuleById } from '@/config/modules.config';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
