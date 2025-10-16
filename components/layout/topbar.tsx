@@ -36,7 +36,7 @@ export function Topbar() {
             .from('users')
             .select('*')
             .eq('id', authUser.id)
-            .single();
+            .single() as { data: UserType | null; error: any };
           
           if (error) {
             console.error('Fehler beim Laden der Benutzerdaten:', error);
@@ -63,7 +63,7 @@ export function Topbar() {
               .from('users')
               .select('*')
               .eq('id', session.user.id)
-              .single();
+              .single() as { data: UserType | null; error: any };
             
             if (error) {
               console.error('Fehler beim Laden der Benutzerdaten:', error);
