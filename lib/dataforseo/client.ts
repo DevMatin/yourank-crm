@@ -1,105 +1,153 @@
-import { DataForSeoRequest, DataForSeoResponse, DataForSeoError } from '@/types/dataforseo';
+import { 
+  SerpApi, 
+  KeywordsDataApi, 
+  DomainAnalyticsApi,
+  DataforseoLabsApi,
+  BacklinksApi,
+  OnPageApi,
+  ContentAnalysisApi,
+  ContentGenerationApi,
+  MerchantApi,
+  AppDataApi,
+  BusinessDataApi,
+  AiOptimizationApi,
+  AppendixApi
+} from 'dataforseo-client';
 import { logger } from '@/lib/logger';
 
 const DATAFORSEO_BASE_URL = 'https://api.dataforseo.com';
 
-export class DataForSeoClient {
-  private login: string;
-  private password: string;
-
-  constructor() {
-    this.login = process.env.DATAFORSEO_LOGIN || '';
-    this.password = process.env.DATAFORSEO_PASSWORD || '';
-  }
-
-  private getAuthHeader(): string {
+/**
+ * Creates an authenticated fetch function for DataForSEO API
+ * Supports both API Key and Login/Password authentication
+ */
+function createAuthenticatedFetch(username?: string, password?: string) {
+  return (url: RequestInfo, init?: RequestInit): Promise<Response> => {
     // Use API key if available, otherwise use login:password
     const apiKey = process.env.DATAFORSEO_API_KEY;
+    let authHeader: string;
+    
     if (apiKey) {
-      return `Basic ${apiKey}`;
+      authHeader = `Basic ${apiKey}`;
+    } else {
+      const login = username || process.env.DATAFORSEO_LOGIN || '';
+      const pass = password || process.env.DATAFORSEO_PASSWORD || '';
+      
+      if (!login || !pass) {
+        throw new Error('DataForSEO credentials not configured. Please set DATAFORSEO_LOGIN and DATAFORSEO_PASSWORD or DATAFORSEO_API_KEY');
+      }
+      
+      const credentials = Buffer.from(`${login}:${pass}`).toString('base64');
+      authHeader = `Basic ${credentials}`;
     }
+
+    const newInit: RequestInit = {
+      ...init,
+      headers: {
+        ...init?.headers,
+        'Authorization': authHeader,
+        'Content-Type': 'application/json',
+      },
+    };
+
+    return fetch(url, newInit);
+  };
+}
+
+/**
+ * DataForSEO Client Wrapper
+ * Provides pre-configured API instances with authentication
+ */
+export class DataForSeoClient {
+  private authFetch: (url: RequestInfo, init?: RequestInit) => Promise<Response>;
+  
+  // API Instances
+  public readonly serp: SerpApi;
+  public readonly keywords: KeywordsDataApi;
+  public readonly domain: DomainAnalyticsApi;
+  public readonly labs: DataforseoLabsApi;
+  public readonly backlinks: BacklinksApi;
+  public readonly onpage: OnPageApi;
+  public readonly content: ContentAnalysisApi;
+  public readonly generation: ContentGenerationApi;
+  public readonly merchant: MerchantApi;
+  public readonly app: AppDataApi;
+  public readonly business: BusinessDataApi;
+  public readonly ai: AiOptimizationApi;
+  public readonly appendix: AppendixApi;
+
+  constructor(username?: string, password?: string) {
+    this.authFetch = createAuthenticatedFetch(username, password);
     
-    const credentials = Buffer.from(`${this.login}:${this.password}`).toString('base64');
-    return `Basic ${credentials}`;
+    // Initialize all API instances with authentication
+    this.serp = new SerpApi(DATAFORSEO_BASE_URL, { fetch: this.authFetch });
+    this.keywords = new KeywordsDataApi(DATAFORSEO_BASE_URL, { fetch: this.authFetch });
+    this.domain = new DomainAnalyticsApi(DATAFORSEO_BASE_URL, { fetch: this.authFetch });
+    this.labs = new DataforseoLabsApi(DATAFORSEO_BASE_URL, { fetch: this.authFetch });
+    this.backlinks = new BacklinksApi(DATAFORSEO_BASE_URL, { fetch: this.authFetch });
+    this.onpage = new OnPageApi(DATAFORSEO_BASE_URL, { fetch: this.authFetch });
+    this.content = new ContentAnalysisApi(DATAFORSEO_BASE_URL, { fetch: this.authFetch });
+    this.generation = new ContentGenerationApi(DATAFORSEO_BASE_URL, { fetch: this.authFetch });
+    this.merchant = new MerchantApi(DATAFORSEO_BASE_URL, { fetch: this.authFetch });
+    this.app = new AppDataApi(DATAFORSEO_BASE_URL, { fetch: this.authFetch });
+    this.business = new BusinessDataApi(DATAFORSEO_BASE_URL, { fetch: this.authFetch });
+    this.ai = new AiOptimizationApi(DATAFORSEO_BASE_URL, { fetch: this.authFetch });
+    this.appendix = new AppendixApi(DATAFORSEO_BASE_URL, { fetch: this.authFetch });
   }
 
-  async fetchDataForSeo(endpoint: string, payload: DataForSeoRequest[]): Promise<DataForSeoResponse> {
-    const apiKey = process.env.DATAFORSEO_API_KEY;
-    if (!apiKey && (!this.login || !this.password)) {
-      throw new Error('DataForSEO credentials not configured');
-    }
-
-    const url = `${DATAFORSEO_BASE_URL}${endpoint}`;
-    
+  /**
+   * Test connection to DataForSEO API
+   */
+  async testConnection(): Promise<boolean> {
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': this.getAuthHeader(),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData: DataForSeoError = await response.json();
-        throw new Error(`DataForSEO API Error: ${errorData.status_message} (${errorData.status_code})`);
-      }
-
-      const data: DataForSeoResponse = await response.json();
-      return data;
+      // Use a simple endpoint to test connection
+      const response = await this.authFetch(`${DATAFORSEO_BASE_URL}/v3/appendix/user_data`);
+      return response.ok;
     } catch (error) {
-      logger.error('DataForSEO API Error:', error);
-      throw error;
+      logger.error('DataForSEO connection test failed:', error);
+      return false;
     }
-  }
-
-  async fetchTaskResult(taskId: string, endpoint: string): Promise<DataForSeoResponse> {
-    const url = `${DATAFORSEO_BASE_URL}${endpoint}/${taskId}`;
-    
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Authorization': this.getAuthHeader(),
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorData: DataForSeoError = await response.json();
-        throw new Error(`DataForSEO API Error: ${errorData.status_message} (${errorData.status_code})`);
-      }
-
-      const data: DataForSeoResponse = await response.json();
-      return data;
-    } catch (error) {
-      logger.error('DataForSEO Task Result Error:', error);
-      throw error;
-    }
-  }
-
-  // Helper method to create standard request payload
-  createRequest(data: DataForSeoRequest): DataForSeoRequest[] {
-    return [data];
-  }
-
-  // Helper method to extract results from response
-  extractResults(response: DataForSeoResponse): any[] {
-    if (response.tasks && response.tasks.length > 0) {
-      const task = response.tasks[0];
-      if (task.result && task.result.length > 0) {
-        return task.result[0].items || [];
-      }
-    }
-    return [];
   }
 }
 
 // Export singleton instance
 export const dataForSeoClient = new DataForSeoClient();
 
-// Convenience function for API routes
-export async function fetchDataForSeo(endpoint: string, payload: DataForSeoRequest[]): Promise<DataForSeoResponse> {
-  return dataForSeoClient.fetchDataForSeo(endpoint, payload);
+// Export individual API classes for direct usage
+export {
+  SerpApi,
+  KeywordsDataApi,
+  DomainAnalyticsApi,
+  DataforseoLabsApi,
+  BacklinksApi,
+  OnPageApi,
+  ContentAnalysisApi,
+  ContentGenerationApi,
+  MerchantApi,
+  AppDataApi,
+  BusinessDataApi,
+  AiOptimizationApi,
+  AppendixApi
+};
+
+// Legacy compatibility - keep the old interface for existing code
+export async function fetchDataForSeo(endpoint: string, payload: any[]): Promise<any> {
+  logger.warn('fetchDataForSeo is deprecated. Please use the new API instances directly.');
+  
+  // Create a new client instance for legacy compatibility
+  const client = new DataForSeoClient();
+  const response = await (client as any).authFetch(
+    `${DATAFORSEO_BASE_URL}${endpoint}`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`DataForSEO API Error: ${errorData.status_message} (${errorData.status_code})`);
+  }
+
+  return await response.json();
 }

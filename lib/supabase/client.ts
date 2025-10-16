@@ -8,8 +8,22 @@ export function createClient() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+    // Debug logging to help troubleshoot environment variable loading
+    console.log('Supabase environment variables check:', {
+      url: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'MISSING',
+      key: supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'MISSING',
+      nodeEnv: process.env.NODE_ENV
+    });
+
     if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase environment variables');
+      console.error('Missing Supabase environment variables:', {
+        url: !!supabaseUrl,
+        key: !!supabaseAnonKey
+      });
+      console.error('Please check your .env.local file and ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set');
+      console.error('Make sure to restart your development server after adding environment variables');
+      // Return null instead of throwing to prevent app crash
+      return null;
     }
 
     try {
@@ -41,14 +55,26 @@ export function createClient() {
           detectSessionInUrl: true,
         },
       });
+      
+      // Verify that the client was created successfully
+      if (!supabaseClient) {
+        throw new Error('Supabase client creation returned null/undefined');
+      }
+      
+      console.log('Supabase client created successfully');
     } catch (error) {
       console.error('Error creating Supabase client:', error);
       // Fallback: Versuche es ohne erweiterte Konfiguration
       try {
         supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
+        if (!supabaseClient) {
+          throw new Error('Fallback client creation returned null/undefined');
+        }
+        console.log('Supabase client created successfully (fallback mode)');
       } catch (fallbackError) {
         console.error('Fallback Supabase client creation failed:', fallbackError);
-        throw new Error('Failed to create Supabase client');
+        // Return null instead of throwing to prevent app crash
+        return null;
       }
     }
   }

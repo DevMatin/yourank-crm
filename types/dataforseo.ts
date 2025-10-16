@@ -1,3 +1,9 @@
+// ============================================================================
+// MIGRATION NOTICE: This file contains legacy types for backward compatibility
+// New implementations should use types from 'dataforseo-client' package
+// ============================================================================
+
+// Legacy types - kept for backward compatibility
 export interface DataForSeoRequest {
   keyword?: string;
   domain?: string;
@@ -170,3 +176,90 @@ export interface DomainOverviewResponse extends DataForSeoResponse {
     }>;
   }>;
 }
+
+// ============================================================================
+// NEW: Official DataForSEO Client Types
+// Import all types from the official dataforseo-client package
+// ============================================================================
+
+// Re-export commonly used types from dataforseo-client
+export type {
+  // SERP API Types
+  SerpGoogleOrganicLiveAdvancedRequestInfo,
+  SerpGoogleOrganicLiveAdvancedResponseInfo,
+  SerpGoogleOrganicTaskPostRequestInfo,
+  SerpGoogleOrganicTaskPostResponseInfo,
+  SerpGoogleOrganicTaskGetAdvancedResponseInfo,
+  
+  // Keywords Data API Types
+  KeywordsDataGoogleAdsSearchVolumeLiveRequestInfo,
+  KeywordsDataGoogleAdsSearchVolumeLiveResponseInfo,
+  KeywordsDataGoogleAdsKeywordsForKeywordsLiveRequestInfo,
+  KeywordsDataGoogleAdsKeywordsForKeywordsLiveResponseInfo,
+  
+  // Domain Analytics API Types
+  DomainAnalyticsTechnologiesDomainsByTechnologyLiveRequestInfo,
+  DomainAnalyticsTechnologiesDomainsByTechnologyLiveResponseInfo,
+  
+  // DataForSEO Labs API Types
+  DataforseoLabsGoogleKeywordIdeasLiveRequestInfo,
+  DataforseoLabsGoogleKeywordIdeasLiveResponseInfo,
+  DataforseoLabsGoogleRelatedKeywordsLiveRequestInfo,
+  DataforseoLabsGoogleRelatedKeywordsLiveResponseInfo,
+  
+  // Backlinks API Types
+  BacklinksPageIntersectionLiveRequestInfo,
+  BacklinksPageIntersectionLiveResponseInfo,
+  
+  // OnPage API Types
+  OnPageLighthouseLiveJsonRequestInfo,
+  OnPageLighthouseLiveJsonResponseInfo,
+  
+  // Content Analysis API Types
+  ContentAnalysisSummaryLiveRequestInfo,
+  ContentAnalysisSummaryLiveResponseInfo,
+  
+  // Content Generation API Types
+  ContentGenerationGenerateLiveRequestInfo,
+  ContentGenerationGenerateLiveResponseInfo,
+  
+  // Merchant API Types
+  MerchantAmazonProductsTaskPostRequestInfo,
+  MerchantAmazonProductsTaskPostResponseInfo,
+  
+  // App Data API Types
+  AppDataAppleAppInfoTaskPostRequestInfo,
+  AppDataAppleAppInfoTaskPostResponseInfo,
+  
+  // Business Data API Types
+  BusinessDataGoogleMyBusinessInfoTaskPostRequestInfo,
+  BusinessDataGoogleMyBusinessInfoTaskPostResponseInfo,
+  
+  // AI Optimization API Types
+  AiOptimizationChatGptLlmResponsesLiveRequestInfo,
+  AiOptimizationChatGptLlmResponsesLiveResponseInfo,
+  
+  // Appendix API Types
+  AppendixStatusResultInfo,
+  AppendixUserDataResultInfo
+} from 'dataforseo-client';
+
+// ============================================================================
+// MIGRATION GUIDE
+// ============================================================================
+/*
+OLD WAY (deprecated):
+import { DataForSeoClient } from '@/lib/dataforseo/client';
+const client = new DataForSeoClient();
+const result = await client.fetchDataForSeo('/v3/keywords_data/related_keywords/live', payload);
+
+NEW WAY (recommended):
+import { dataForSeoClient } from '@/lib/dataforseo/client';
+const result = await dataForSeoClient.keywords.googleAdsKeywordsForKeywordsLive([requestInfo]);
+
+Or use direct imports:
+import { KeywordsDataApi, KeywordsDataGoogleAdsKeywordsForKeywordsLiveRequestInfo } from 'dataforseo-client';
+const keywordsApi = new KeywordsDataApi("https://api.dataforseo.com", { fetch: authFetch });
+const request = new KeywordsDataGoogleAdsKeywordsForKeywordsLiveRequestInfo();
+const result = await keywordsApi.googleAdsKeywordsForKeywordsLive([request]);
+*/

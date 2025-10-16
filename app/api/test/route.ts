@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { dataForSeoClient } from '@/lib/dataforseo/client';
 import { checkUserCredits, deductCredits } from '@/lib/utils/analysis';
 import { logger } from '@/lib/logger';
+import { KeywordsDataGoogleAdsKeywordsForKeywordsLiveRequestInfo } from 'dataforseo-client';
 
 export async function POST(_request: NextRequest) {
   try {
@@ -22,18 +23,14 @@ export async function POST(_request: NextRequest) {
     const requiredCredits = 1;
     await checkUserCredits(user.id, requiredCredits);
 
-    // Test DataForSEO connection
-    const testPayload = [{
-      keyword: 'seo tools',
-      location_name: 'Germany',
-      language_name: 'German',
-      limit: 5
-    }];
+    // Test DataForSEO connection using the new official client
+    const request = new KeywordsDataGoogleAdsKeywordsForKeywordsLiveRequestInfo();
+    request.keywords = ['seo tools'];
+    request.location_name = 'Germany';
+    request.language_name = 'German';
+    request.limit = 5;
 
-    const result = await dataForSeoClient.fetchDataForSeo(
-      '/v3/keywords_data/related_keywords/live',
-      testPayload
-    );
+    const result = await dataForSeoClient.keywords.googleAdsKeywordsForKeywordsLive([request]);
 
     // Deduct credits
     await deductCredits(user.id, requiredCredits);
