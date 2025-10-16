@@ -37,14 +37,6 @@ export const createClient = () => {
         global: {
           fetch: fetch,
         },
-        // Deaktiviere alle problematischen Features
-        db: {
-          schema: 'public',
-        },
-        // Minimale Konfiguration für Browser-Kompatibilität
-        headers: {
-          'X-Client-Info': 'supabase-js-web',
-        },
       }
     );
   }
