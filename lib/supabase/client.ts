@@ -1,12 +1,11 @@
 import { createBrowserClient } from '@supabase/ssr';
-import { Database } from '@/types/database';
 
-let supabaseClient: ReturnType<typeof createBrowserClient<Database>> | null = null;
+let supabaseClient: any = null;
 
 export const createClient = () => {
   // Singleton pattern to prevent multiple instances
   if (!supabaseClient) {
-    supabaseClient = createBrowserClient<Database>(
+    supabaseClient = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {

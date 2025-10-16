@@ -1,7 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { Database } from '@/types/database';
 
 export async function middleware(req: NextRequest) {
   let res = NextResponse.next({
@@ -11,7 +10,7 @@ export async function middleware(req: NextRequest) {
   });
 
   try {
-    const supabase = createServerClient<Database>(
+    const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
