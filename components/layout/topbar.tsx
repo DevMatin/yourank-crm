@@ -75,7 +75,7 @@ export function Topbar() {
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: any, session: any) => {
         try {
           if (event === 'SIGNED_OUT' || !session) {
             router.push('/login');
