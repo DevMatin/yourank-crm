@@ -54,14 +54,7 @@ const nextConfig = {
     };
     
     // Stelle sicher, dass keine Node.js Module im Browser verwendet werden
-    const webpack = require('webpack');
     config.plugins = config.plugins || [];
-    config.plugins.push(
-      new webpack.DefinePlugin({
-        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-        'global': 'globalThis',
-      })
-    );
     
     // Externe Module für Edge Runtime
     config.externals = config.externals || [];
@@ -77,16 +70,9 @@ const nextConfig = {
     
     // Optimiere Webpack Cache für bessere Performance
     if (dev) {
-      config.cache = {
-        type: 'filesystem',
-        buildDependencies: {
-          config: [__filename],
-        },
-        // Reduziere Cache-Größe und verbessere Serialisierung
-        maxMemoryGenerations: 1,
-        memoryCacheUnaffected: true,
-      };
+      config.cache = false; // Deaktiviere Cache um Windows-Probleme zu vermeiden
     }
+    
     
     return config;
   },
