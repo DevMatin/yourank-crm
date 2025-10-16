@@ -34,10 +34,6 @@ export const createClient = () => {
           autoRefreshToken: true,
           detectSessionInUrl: true,
         },
-        realtime: {
-          // Deaktiviere Realtime für bessere Kompatibilität
-          enabled: false,
-        },
         global: {
           fetch: fetch,
         },
