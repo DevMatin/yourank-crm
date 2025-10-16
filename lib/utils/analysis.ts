@@ -130,20 +130,38 @@ export async function deductCredits(userId: string, amount: number) {
 export async function checkUserCredits(userId: string, required: number) {
   const supabase = await createServerSupabaseClient();
   
-  const { data, error } = await (supabase as any)
-    .from('users')
-    .select('credits')
-    .eq('id', userId)
-    .single();
+  try {
+    // First, try to get the current user to ensure they're authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      throw new Error('User not authenticated');
+    }
+    
+    // Verify that the requested userId matches the authenticated user
+    if (user.id !== userId) {
+      throw new Error('Unauthorized: Cannot check credits for another user');
+    }
+    
+    // Now try to get credits using the authenticated user's context
+    const { data: userData, error: userError } = await (supabase as any)
+      .from('users')
+      .select('credits')
+      .eq('id', userId)
+      .single();
 
-  if (error) {
+    if (userError) {
+      logger.error('Error checking credits:', userError);
+      throw new Error(`Failed to check credits: ${userError.message}`);
+    }
+
+    if (userData.credits < required) {
+      throw new Error(`Insufficient credits. Required: ${required}, Available: ${userData.credits}`);
+    }
+
+    return userData.credits;
+  } catch (error: any) {
     logger.error('Error checking credits:', error);
     throw new Error(`Failed to check credits: ${error.message}`);
   }
-
-  if (data.credits < required) {
-    throw new Error(`Insufficient credits. Required: ${required}, Available: ${data.credits}`);
-  }
-
-  return data.credits;
 }

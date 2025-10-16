@@ -106,7 +106,7 @@ DECLARE
     current_credits INTEGER;
     new_credits INTEGER;
 BEGIN
-    -- Get current credits
+    -- Get current credits (bypass RLS for this function)
     SELECT credits INTO current_credits FROM users WHERE id = user_id;
     
     -- Check if user has enough credits
@@ -117,7 +117,7 @@ BEGIN
     -- Calculate new credits
     new_credits := current_credits - amount;
     
-    -- Update credits
+    -- Update credits (bypass RLS for this function)
     UPDATE users 
     SET credits = new_credits, updated_at = NOW()
     WHERE id = user_id;
