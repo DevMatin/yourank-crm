@@ -35,12 +35,19 @@ const nextConfig = {
       
       config.resolve.alias = {
         ...config.resolve.alias,
-        '@supabase/realtime-js': false,
         'require': false,
         'module': false,
         'exports': false,
         'global': 'globalThis',
       };
+
+      // Ignore problematic modules that cause issues in browser environment
+      const webpack = require('webpack');
+      config.plugins.push(
+        new webpack.IgnorePlugin({
+          resourceRegExp: /^ws$/,
+        })
+      );
     }
     return config;
   },

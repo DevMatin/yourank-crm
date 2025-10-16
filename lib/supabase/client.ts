@@ -13,36 +13,57 @@ export function createClient(): SupabaseClient {
       throw new Error('Missing Supabase environment variables');
     }
 
-    supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey, {
-      cookies: {
-        get(name: string) {
-          if (typeof document !== 'undefined') {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop()?.split(';').shift();
-          }
-          return undefined;
+    try {
+      // Minimale Konfiguration ohne problematische Module
+      supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+        cookies: {
+          get(name: string) {
+            if (typeof document !== 'undefined') {
+              const value = `; ${document.cookie}`;
+              const parts = value.split(`; ${name}=`);
+              if (parts.length === 2) return parts.pop()?.split(';').shift();
+            }
+            return undefined;
+          },
+          set(name: string, value: string, options: any) {
+            if (typeof document !== 'undefined') {
+              document.cookie = `${name}=${value}; path=/; ${options?.maxAge ? `max-age=${options.maxAge}` : ''}`;
+            }
+          },
+          remove(name: string, options: any) {
+            if (typeof document !== 'undefined') {
+              document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+            }
+          },
         },
-        set(name: string, value: string, options: any) {
-          if (typeof document !== 'undefined') {
-            document.cookie = `${name}=${value}; path=/; ${options?.maxAge ? `max-age=${options.maxAge}` : ''}`;
-          }
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
         },
-        remove(name: string, options: any) {
-          if (typeof document !== 'undefined') {
-            document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-          }
+        // Deaktiviere Realtime komplett
+        realtime: {
+          disabled: true,
         },
-      },
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-      },
-      global: {
-        fetch: fetch,
-      },
-    });
+        // Minimale globale Konfiguration
+        global: {
+          fetch: fetch,
+        },
+        // Deaktiviere weitere problematische Features
+        db: {
+          schema: 'public',
+        },
+      });
+    } catch (error) {
+      console.error('Error creating Supabase client:', error);
+      // Fallback: Versuche es ohne erweiterte Konfiguration
+      try {
+        supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
+      } catch (fallbackError) {
+        console.error('Fallback Supabase client creation failed:', fallbackError);
+        throw new Error('Failed to create Supabase client');
+      }
+    }
   }
   return supabaseClient;
 }
