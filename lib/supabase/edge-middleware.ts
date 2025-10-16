@@ -33,10 +33,6 @@ export async function middleware(req: NextRequest) {
         global: {
           fetch: fetch,
         },
-        // Deaktiviere Realtime für Edge Runtime
-        realtime: {
-          enabled: false,
-        },
         // Edge Runtime kompatible Auth-Konfiguration
         auth: {
           persistSession: false,

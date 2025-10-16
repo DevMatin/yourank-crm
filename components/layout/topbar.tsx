@@ -16,9 +16,16 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
 import { Moon, Sun, LogOut, User, Settings } from 'lucide-react';
-import { Database } from '@/types/database';
-
-type UserType = Database['public']['Tables']['users']['Row'];
+// Einfache User-Typdefinition für bessere Kompatibilität
+type UserType = {
+  id: string;
+  email: string;
+  name: string | null;
+  credits: number;
+  plan: string;
+  created_at: string;
+  updated_at: string;
+};
 
 export function Topbar() {
   const [user, setUser] = useState<UserType | null>(null);
@@ -32,16 +39,20 @@ export function Topbar() {
         const { data: { user: authUser } } = await supabase.auth.getUser();
         
         if (authUser) {
-          const { data: userData, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', authUser.id)
-            .single() as { data: UserType | null; error: any };
-          
-          if (error) {
-            console.error('Fehler beim Laden der Benutzerdaten:', error);
-          } else {
-            setUser(userData);
+          try {
+            const { data: userData, error } = await supabase
+              .from('users')
+              .select('*')
+              .filter('id', 'eq', authUser.id)
+              .maybeSingle();
+            
+            if (error) {
+              console.error('Fehler beim Laden der Benutzerdaten:', error);
+            } else if (userData) {
+              setUser(userData as any);
+            }
+          } catch (dbError) {
+            console.error('Datenbankfehler:', dbError);
           }
         }
       } catch (error) {
@@ -59,16 +70,20 @@ export function Topbar() {
           if (event === 'SIGNED_OUT' || !session) {
             router.push('/login');
           } else if (session.user) {
-            const { data: userData, error } = await supabase
-              .from('users')
-              .select('*')
-              .eq('id', session.user.id)
-              .single() as { data: UserType | null; error: any };
-            
-            if (error) {
-              console.error('Fehler beim Laden der Benutzerdaten:', error);
-            } else {
-              setUser(userData);
+            try {
+              const { data: userData, error } = await supabase
+                .from('users')
+                .select('*')
+                .filter('id', 'eq', session.user.id)
+                .maybeSingle();
+              
+              if (error) {
+                console.error('Fehler beim Laden der Benutzerdaten:', error);
+              } else if (userData) {
+                setUser(userData as any);
+              }
+            } catch (dbError) {
+              console.error('Datenbankfehler:', dbError);
             }
           }
         } catch (error) {
