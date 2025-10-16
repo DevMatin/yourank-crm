@@ -20,6 +20,9 @@ export const createClient = () => {
             eventsPerSecond: 10,
           },
         },
+        global: {
+          fetch: fetch,
+        },
       }
     );
   }

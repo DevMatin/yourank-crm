@@ -39,6 +39,10 @@ export async function middleware(req: NextRequest) {
           autoRefreshToken: false,
           detectSessionInUrl: false,
         },
+        // Deaktiviere Realtime in Edge Runtime
+        realtime: {
+          disabled: true,
+        },
       }
     );
 
