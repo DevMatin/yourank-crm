@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { cancelTask, updateAnalysis } from '@/lib/utils/task-handler';
+import { cancelTask } from '@/lib/utils/task-handler';
+import { updateAnalysis } from '@/lib/utils/analysis';
 import { logger } from '@/lib/logger';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: taskId } = await params;
     const supabase = await createServerSupabaseClient();
     
     // Get user from session
@@ -19,8 +21,6 @@ export async function POST(
         { status: 401 }
       );
     }
-
-    const taskId = params.id;
 
     // Get analysis record to verify ownership
     const { data: analysis, error: analysisError } = await supabase

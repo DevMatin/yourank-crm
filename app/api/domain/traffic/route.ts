@@ -3,7 +3,6 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { dataForSeoClient } from '@/lib/dataforseo/client';
 import { checkUserCredits, deductCredits, saveAnalysis, updateAnalysis } from '@/lib/utils/analysis';
 import { logger } from '@/lib/logger';
-import { DomainAnalyticsTrafficAnalyticsLiveRequestInfo } from 'dataforseo-client';
 
 export async function POST(request: NextRequest) {
   try {

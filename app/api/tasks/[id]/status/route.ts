@@ -5,9 +5,10 @@ import { logger } from '@/lib/logger';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: taskId } = await params;
     const supabase = await createServerSupabaseClient();
     
     // Get user from session
@@ -19,8 +20,6 @@ export async function GET(
         { status: 401 }
       );
     }
-
-    const taskId = params.id;
 
     // Get analysis record to verify ownership and get endpoint
     const { data: analysis, error: analysisError } = await supabase

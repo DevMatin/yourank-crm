@@ -28,7 +28,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     // Check connection status
     const checkConnection = async () => {
       try {
-        const { data: { subscription } } = await supabase
+        const { data, error } = await supabase
           .channel('connection-check')
           .on('system', {}, (payload) => {
             setIsConnected(true);
@@ -37,10 +37,18 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
             setIsConnected(status === 'SUBSCRIBED');
           });
 
+        if (error) {
+          console.error('Error subscribing to connection check:', error);
+          setIsConnected(false);
+          return;
+        }
+
         // Cleanup after 5 seconds
-        setTimeout(() => {
-          subscription.unsubscribe();
-        }, 5000);
+        if (data?.subscription) {
+          setTimeout(() => {
+            data.subscription.unsubscribe();
+          }, 5000);
+        }
       } catch (error) {
         console.error('Error checking Supabase connection:', error);
         setIsConnected(false);

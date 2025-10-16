@@ -50,7 +50,7 @@ export function RecentAnalysisCard({ analyses }: RecentAnalysisCardProps) {
         <div className="space-y-4">
           {analyses.map((analysis) => {
             const [moduleId, toolId] = analysis.type.split('_');
-            const module = getModuleById(moduleId);
+            const moduleConfig = getModuleById(moduleId);
             const tool = getToolById(moduleId, toolId);
             
             return (
@@ -101,7 +101,7 @@ export function RecentAnalysisCard({ analyses }: RecentAnalysisCardProps) {
                 <div className="flex items-center gap-2">
                   {analysis.status === 'completed' && (
                     <Button variant="ghost" size="sm" asChild>
-                      <Link href={`${module?.basePath}/${toolId}`}>
+                      <Link href={`${moduleConfig?.basePath}/${toolId}`}>
                         <Eye className="h-4 w-4" />
                       </Link>
                     </Button>

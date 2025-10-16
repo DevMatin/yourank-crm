@@ -1,6 +1,6 @@
 import { logger } from '@/lib/logger';
 import { dataForSeoClient } from '@/lib/dataforseo/client';
-import { updateAnalysis } from './analysis';
+import { updateAnalysis } from '@/lib/utils/analysis';
 
 export interface TaskResult {
   status: 'pending' | 'processing' | 'completed' | 'failed';

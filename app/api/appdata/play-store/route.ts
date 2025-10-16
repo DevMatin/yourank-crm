@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/supabase/server';
 import { checkUserCredits, deductCredits, saveAnalysis, updateAnalysis } from '@/lib/utils/analysis';
-import { dataForSeoClient } from '@/lib/dataforseo/client';
+import { fetchDataForSeo } from '@/lib/dataforseo/client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,20 +24,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Analysis-Eintrag erstellen
-    const analysisId = await saveAnalysis({
-      user_id: user.id,
-      type: 'play_store',
-      input: {
+    const analysisRecord = await saveAnalysis(
+      {
         app_name,
         country: country || 'de',
         language: language || 'de'
       },
-      status: 'processing'
-    });
+      'appdata_play_store',
+      user.id,
+      undefined,
+      2
+    );
 
     try {
       // DataForSEO AppData API aufrufen
-      const response = await dataForSeoClient.appData.googlePlayLive([
+      const response = await fetchDataForSeo('/v3/app_data/google_play/task_post', [
         {
           app_name,
           country: country || 'de',
@@ -78,14 +79,14 @@ export async function POST(request: NextRequest) {
       await deductCredits(user.id, 2);
 
       // Analysis updaten
-      await updateAnalysis(analysisId, {
+      await updateAnalysis(analysisRecord.id, {
         status: 'completed',
         result: processedResult
       });
 
       return NextResponse.json({
         success: true,
-        analysis_id: analysisId,
+        analysis_id: analysisRecord.id,
         result: processedResult
       });
 
@@ -93,9 +94,9 @@ export async function POST(request: NextRequest) {
       console.error('DataForSEO API Error:', error);
       
       // Analysis als fehlgeschlagen markieren
-      await updateAnalysis(analysisId, {
+      await updateAnalysis(analysisRecord.id, {
         status: 'failed',
-        error: error instanceof Error ? error.message : 'Unbekannter Fehler'
+        result: { error: error instanceof Error ? error.message : 'Unbekannter Fehler' }
       });
 
       return NextResponse.json({ 

@@ -45,6 +45,7 @@ export default function OnPageAuditPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<OnPageResult | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
+  const [analysisId, setAnalysisId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     target: '',
     max_crawl_pages: 100,
@@ -76,6 +77,7 @@ export default function OnPageAuditPage() {
       if (data.task_id) {
         // Task-basierte Analyse gestartet
         setTaskId(data.task_id);
+        setAnalysisId(data.analysis_id);
         toast.success('OnPage Audit gestartet! Die Analyse läuft im Hintergrund...');
       } else if (data.result) {
         // Sofortige Ergebnisse
@@ -259,9 +261,9 @@ export default function OnPageAuditPage() {
 
       {taskId && (
         <TaskProgress 
-          taskId={taskId} 
+          taskId={taskId}
+          analysisId={analysisId || ''}
           onComplete={handleTaskComplete}
-          estimatedTime="5-15 Minuten"
         />
       )}
 

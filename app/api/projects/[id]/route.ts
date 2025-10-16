@@ -4,9 +4,10 @@ import { logger } from '@/lib/logger';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createServerSupabaseClient();
     
     // Get user from session
@@ -33,7 +34,7 @@ export async function GET(
           updated_at
         )
       `)
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .single();
 
@@ -65,9 +66,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createServerSupabaseClient();
     
     // Get user from session
@@ -113,7 +115,7 @@ export async function PUT(
       .select('id')
       .eq('user_id', user.id)
       .eq('domain', normalizedDomain)
-      .neq('id', params.id)
+      .neq('id', id)
       .single();
 
     if (existingProject) {
@@ -130,7 +132,7 @@ export async function PUT(
         name: name.trim(),
         domain: normalizedDomain
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .select()
       .single();
@@ -163,9 +165,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createServerSupabaseClient();
     
     // Get user from session
@@ -182,7 +185,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('projects')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id);
 
     if (error) {

@@ -52,7 +52,7 @@ export function QuickActions() {
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {popularTools.map((tool) => {
-            const module = modules.find(m => m.id === tool.moduleId);
+            const moduleConfig = modules.find(m => m.id === tool.moduleId);
             const Icon = iconMap[tool.icon as keyof typeof iconMap] || Search;
             
             return (
@@ -62,7 +62,7 @@ export function QuickActions() {
                 className="h-auto p-4 flex flex-col items-start gap-2"
                 asChild
               >
-                <Link href={`${module?.basePath}/${tool.toolId}`}>
+                <Link href={`${moduleConfig?.basePath}/${tool.toolId}`}>
                   <div className="flex items-center gap-2">
                     <Icon className="h-4 w-4" />
                     <span className="text-sm font-medium">{tool.name}</span>

@@ -35,5 +35,21 @@ export const createServerSupabaseClient = async () => {
   );
 };
 
+/**
+ * Get the current user from the server-side Supabase client
+ */
+export async function getUser() {
+  const supabase = await createServerSupabaseClient();
+  
+  const { data: { user }, error } = await supabase.auth.getUser();
+  
+  if (error) {
+    console.error('Error getting user:', error);
+    return null;
+  }
+  
+  return user;
+}
+
 // Note: supabase client should be created per request in server components
 // Use createServerSupabaseClient() directly in your server components

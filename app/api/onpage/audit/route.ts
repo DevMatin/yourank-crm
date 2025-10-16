@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Task-Ergebnis verarbeiten (wird vom Task-Handler aufgerufen)
-export async function processTaskResult(taskId: string, taskResult: any, analysisId: string) {
+async function processTaskResult(taskId: string, taskResult: any, analysisId: string) {
   try {
     if (!taskResult || !taskResult.results || taskResult.results.length === 0) {
       throw new Error('Keine OnPage Audit Daten erhalten');

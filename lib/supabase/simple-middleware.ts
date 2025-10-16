@@ -43,10 +43,14 @@ export async function middleware(req: NextRequest) {
   }
 
   // If user is not signed in and the current path is not /login or /signup redirect the user to /login
-  if (!isAuthenticated && (req.nextUrl.pathname.startsWith('/dashboard') || req.nextUrl.pathname === '/')) {
+  const dashboardRoutes = ['/serp', '/keywords', '/domain', '/labs', '/backlinks', '/onpage', '/content', '/merchant', '/appdata', '/business', '/databases', '/ai', '/dashboard'];
+  if (!isAuthenticated && (dashboardRoutes.some(route => req.nextUrl.pathname.startsWith(route)) || req.nextUrl.pathname === '/')) {
     console.log('Redirecting unauthenticated user to login');
     return NextResponse.redirect(new URL('/login', req.url));
   }
+
+  // Dashboard routes are in (dashboard) route group, so they should be accessible directly
+  // No need to redirect /serp, /keywords, etc. - they exist as /serp, /keywords, etc.
 
   return NextResponse.next();
 }
