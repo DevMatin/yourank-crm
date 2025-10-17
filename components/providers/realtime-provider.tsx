@@ -30,10 +30,10 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data, error } = await supabase
           .channel('connection-check')
-          .on('system', {}, (payload) => {
+          .on('system', {}, (payload: any) => {
             setIsConnected(true);
           })
-          .subscribe((status) => {
+          .subscribe((status: any) => {
             setIsConnected(status === 'SUBSCRIBED');
           });
 
@@ -73,7 +73,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
           schema: 'public',
           table: 'analyses'
         },
-        (payload) => {
+        (payload: any) => {
           const analysis = payload.new as DatabaseAnalysis;
           
           // Show toast notification for completed analyses
@@ -122,7 +122,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
           schema: 'public',
           table: 'users'
         },
-        (payload) => {
+        (payload: any) => {
           callback(payload.new);
         }
       )

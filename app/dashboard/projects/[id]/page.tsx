@@ -96,9 +96,9 @@ export default function ProjectDetailPage() {
           currentMonth.setHours(0, 0, 0, 0);
 
           const totalAnalyses = analysesData.length;
-          const totalCreditsUsed = analysesData.reduce((sum, a) => sum + a.credits_used, 0);
+          const totalCreditsUsed = analysesData.reduce((sum: number, a: any) => sum + a.credits_used, 0);
           const lastAnalysis = analysesData.length > 0 ? analysesData[0].created_at : null;
-          const analysesThisMonth = analysesData.filter(a => 
+          const analysesThisMonth = analysesData.filter((a: any) => 
             new Date(a.created_at) >= currentMonth
           ).length;
 

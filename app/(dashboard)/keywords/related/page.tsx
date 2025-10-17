@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,12 @@ import {
   TrendingUp, 
   Globe, 
   Download,
-  Loader2
+  Loader2,
+  History,
+  Clock,
+  Eye,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { RelatedKeywordsTable } from '@/components/keywords/related-keywords-table';
 import { KeywordMetricsCard } from '@/components/keywords/keyword-metrics-card';
@@ -36,6 +41,55 @@ export default function RelatedKeywordsPage() {
   const [error, setError] = useState('');
   const [results, setResults] = useState<RelatedKeyword[]>([]);
   const [analysisId, setAnalysisId] = useState<string | null>(null);
+  const [searchHistory, setSearchHistory] = useState<Array<{
+    keyword: string;
+    location: string;
+    language: string;
+    timestamp: string;
+    resultsCount: number;
+    results: RelatedKeyword[];
+    analysisId: string;
+  }>>([]);
+  const [expandedHistory, setExpandedHistory] = useState<number | null>(null);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+
+  // Load search history on component mount
+  useEffect(() => {
+    const loadSearchHistory = async () => {
+      try {
+        const response = await fetch('/api/analysis/history?type=keywords_related&limit=10');
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Analysis history data:', data);
+          console.log('Analyses:', data.analyses);
+          
+          const historyData = data.analyses?.map((analysis: any) => {
+            console.log('Processing analysis:', analysis);
+            console.log('Parameters:', analysis.parameters);
+            
+            return {
+              keyword: analysis.input?.keyword || analysis.parameters?.keyword || analysis.parameters?.query || 'Unbekanntes Keyword',
+              location: analysis.input?.location || analysis.parameters?.location || 'Deutschland',
+              language: analysis.input?.language || analysis.parameters?.language || 'Deutsch',
+              timestamp: new Date(analysis.created_at).toLocaleString('de-DE'),
+              resultsCount: analysis.result?.length || 0,
+              results: analysis.result || [],
+              analysisId: analysis.id
+            };
+          }) || [];
+          
+          console.log('Processed history data:', historyData);
+          setSearchHistory(historyData);
+        }
+      } catch (error) {
+        console.error('Failed to load search history:', error);
+      } finally {
+        setLoadingHistory(false);
+      }
+    };
+
+    loadSearchHistory();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,13 +112,38 @@ export default function RelatedKeywordsPage() {
       });
 
       const data = await response.json();
+      
+      // Debug logging
+      console.log('API Response:', data);
+      console.log('Response status:', response.status);
+      console.log('Data.data:', data.data);
+      console.log('Data.data length:', data.data?.length);
+      console.log('Data source:', data.source);
+      console.log('DataForSEO Task ID:', data.dataForSeoTaskId);
+      console.log('API Endpoint:', data.apiEndpoint);
 
       if (!response.ok) {
-        throw new Error(data.error || 'Fehler bei der Analyse');
+        const errorMessage = data.isConnectionError 
+          ? 'Verbindungsfehler zur DataForSEO API. Bitte versuche es in ein paar Sekunden erneut.'
+          : data.error || 'Fehler bei der Analyse';
+        throw new Error(errorMessage);
       }
 
       setResults(data.data || []);
       setAnalysisId(data.analysisId);
+      
+      // Add to search history with results
+      const newSearchEntry = {
+        keyword: keyword.trim(),
+        location,
+        language,
+        timestamp: new Date().toLocaleString('de-DE'),
+        resultsCount: data.data?.length || 0,
+        results: data.data || [],
+        analysisId: data.analysisId || ''
+      };
+      
+      setSearchHistory(prev => [newSearchEntry, ...prev.slice(0, 9)]); // Keep last 10 searches
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ein unerwarteter Fehler ist aufgetreten');
     } finally {
@@ -227,6 +306,14 @@ export default function RelatedKeywordsPage() {
               <p className="text-muted-foreground">
                 {results.length} verwandte Keywords gefunden
               </p>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="outline" className="text-xs">
+                  📊 DataForSEO API
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  🔗 googleRelatedKeywordsLive
+                </Badge>
+              </div>
             </div>
             
             <div className="flex gap-2">
@@ -268,6 +355,141 @@ export default function RelatedKeywordsPage() {
           {/* Results Table */}
           <RelatedKeywordsTable data={results} />
         </div>
+      )}
+
+      {/* Search History */}
+      {loadingHistory ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Vorherige Suchen
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span>Lade Suchhistorie...</span>
+            </div>
+          </CardContent>
+        </Card>
+      ) : searchHistory.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Vorherige Suchen
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {searchHistory.map((search, index) => (
+                <div key={index} className="border rounded-lg">
+                  <div className="flex items-center justify-between p-3 hover:bg-muted/50 cursor-pointer transition-colors"
+                       onClick={() => {
+                         setKeyword(search.keyword);
+                         setLocation(search.location);
+                         setLanguage(search.language);
+                       }}>
+                    <div className="flex items-center gap-3">
+                      <Hash className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <span className="font-medium">{search.keyword}</span>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span>{search.location}</span>
+                          <span>•</span>
+                          <span>{search.language}</span>
+                          <span>•</span>
+                          <span>{search.resultsCount} Ergebnisse</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        {search.timestamp}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedHistory(expandedHistory === index ? null : index);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        {expandedHistory === index ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {expandedHistory === index && (
+                    <div className="border-t p-4 bg-muted/20">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-semibold">Ergebnisse für "{search.keyword}"</h3>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={() => exportResults('csv')}>
+                              <Download className="h-4 w-4 mr-2" />
+                              CSV Export
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => exportResults('json')}>
+                              <Download className="h-4 w-4 mr-2" />
+                              JSON Export
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {/* Metrics Overview */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                          <KeywordMetricsCard
+                            title="Durchschnittliches Suchvolumen"
+                            value={Math.round(search.results.reduce((sum, r) => sum + r.search_volume, 0) / search.results.length).toLocaleString()}
+                            icon={TrendingUp}
+                          />
+                          <KeywordMetricsCard
+                            title="Durchschnittliche Konkurrenz"
+                            value={`${Math.round(search.results.reduce((sum, r) => sum + r.competition, 0) / search.results.length * 100)}%`}
+                            icon={Hash}
+                          />
+                          <KeywordMetricsCard
+                            title="Durchschnittlicher CPC"
+                            value={`$${(search.results.reduce((sum, r) => sum + r.cpc, 0) / search.results.length).toFixed(2)}`}
+                            icon={Globe}
+                          />
+                          <KeywordMetricsCard
+                            title="Positive Trends"
+                            value={`${search.results.filter(r => r.trend > 0).length}/${search.results.length}`}
+                            icon={TrendingUp}
+                          />
+                        </div>
+
+                        {/* Results Table */}
+                        <RelatedKeywordsTable data={search.results} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Vorherige Suchen
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8 text-muted-foreground">
+              <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Noch keine vorherigen Suchen vorhanden.</p>
+              <p className="text-sm">Führe deine erste Keyword-Analyse durch, um hier Ergebnisse zu sehen.</p>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

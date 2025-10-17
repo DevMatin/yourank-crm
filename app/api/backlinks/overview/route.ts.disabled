@@ -1,0 +1,121 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getUser } from '@/lib/supabase/server';
+import { checkUserCredits, deductCredits, saveAnalysis, updateAnalysis } from '@/lib/utils/analysis';
+import { dataForSeoClient } from '@/lib/dataforseo/client';
+
+export async function POST(request: NextRequest) {
+  try {
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { target, limit, backlinks_status_type, include_subdomains } = body;
+
+    if (!target) {
+      return NextResponse.json({ error: 'Target Domain/URL ist erforderlich' }, { status: 400 });
+    }
+
+    // Credits prüfen (2 Credits für Backlinks Overview)
+    const hasCredits = await checkUserCredits(user.id, 2);
+    if (!hasCredits) {
+      return NextResponse.json({ error: 'Nicht genügend Credits verfügbar' }, { status: 402 });
+    }
+
+    // Analysis-Eintrag erstellen
+    const analysisId = await saveAnalysis(
+      {
+        target,
+        limit: parseInt(limit),
+        backlinks_status_type,
+        include_subdomains: include_subdomains || false
+      },
+      'backlinks_overview',
+      user.id,
+      undefined,
+      2
+    );
+
+    try {
+      // DataForSEO Backlinks API aufrufen
+      const response = await dataForSeoClient.backlinks as any).summaryLive([
+        {
+          target,
+          limit: parseInt(limit),
+          backlinks_status_type: backlinks_status_type || 'all',
+          include_subdomains: include_subdomains || false,
+          include_indirect_links: true
+        } as any
+      ]);
+
+      if (!response || !response.results || response.results.length === 0) {
+        throw new Error('Keine Backlinks Overview Daten erhalten');
+      }
+
+      const result = response.results[0];
+      
+      // Ergebnisse verarbeiten
+      const processedResult = {
+        total_backlinks: result.total_backlinks || 0,
+        referring_domains: result.referring_domains || 0,
+        referring_ips: result.referring_ips || 0,
+        referring_main_domains: result.referring_main_domains || 0,
+        broken_backlinks: result.broken_backlinks || 0,
+        lost_backlinks: result.lost_backlinks || 0,
+        new_backlinks: result.new_backlinks || 0,
+        domain_rating: result.domain_rating || 0,
+        url_rating: result.url_rating || 0,
+        spam_score: result.spam_score || 0,
+        toxic_score: result.toxic_score || 0,
+        top_backlinks: result.backlinks?.slice(0, parseInt(limit)).map((backlink: any) => ({
+          url_from: backlink.url_from || '',
+          url_to: backlink.url_to || '',
+          anchor: backlink.anchor || '',
+          domain_rating: backlink.domain_rating || 0,
+          url_rating: backlink.url_rating || 0,
+          link_type: backlink.link_type || '',
+          first_seen: backlink.first_seen || ''
+        })) || []
+      };
+
+      // Credits abziehen
+      await deductCredits(user.id, 2);
+
+      // Analysis updaten
+      await updateAnalysis(analysisId, {
+        status: 'completed',
+        result: processedResult
+      });
+
+      return NextResponse.json({
+        success: true,
+        analysis_id: analysisId,
+        result: processedResult
+      });
+
+    } catch (error) {
+      console.error('DataForSEO API Error:', error);
+      
+      // Analysis als fehlgeschlagen markieren
+      await updateAnalysis(analysisId, {
+        status: 'failed',
+        result: {
+          result: { error: error instanceof Error ? error.message : 'Unbekannter Fehler' }
+        }
+      });
+
+      return NextResponse.json({ 
+        error: 'Fehler bei der Backlinks Overview Analyse',
+        details: error instanceof Error ? error.message : 'Unbekannter Fehler'
+      }, { status: 500 });
+    }
+
+  } catch (error) {
+    console.error('Backlinks Overview API Error:', error);
+    return NextResponse.json({ 
+      error: 'Interner Serverfehler',
+      details: error instanceof Error ? error.message : 'Unbekannter Fehler'
+    }, { status: 500 });
+  }
+}

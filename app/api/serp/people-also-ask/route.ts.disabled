@@ -1,0 +1,153 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { dataForSeoClient } from '@/lib/dataforseo/client';
+import { checkUserCredits, deductCredits, saveAnalysis, updateAnalysis } from '@/lib/utils/analysis';
+import { logger } from '@/lib/logger';
+import { SerpGoogleOrganicLiveAdvancedRequestInfo } from 'dataforseo-client';
+
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    
+    // Get user from session
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const { keyword, location = 'Germany', language = 'German', device = 'desktop' } = body;
+
+    // Validate input
+    if (!keyword || typeof keyword !== 'string') {
+      return NextResponse.json(
+        { error: 'Keyword is required' },
+        { status: 400 }
+      );
+    }
+
+    // Check credits
+    const requiredCredits = 1;
+    await checkUserCredits(user.id, requiredCredits);
+
+    // Save analysis record
+    const analysisRecord = await saveAnalysis(
+      { keyword, location, language, device },
+      'serp_people_also_ask',
+      user.id,
+      null,
+      requiredCredits
+    );
+
+    try {
+      // Create DataForSEO request
+      const request = new SerpGoogleOrganicLiveAdvancedRequestInfo();
+      request.keyword = keyword.trim();
+      request.location_name = location;
+      request.language_name = language;
+      request.device = device;
+      request.depth = 10; // Get top 10 results
+      request.calculate_rectangles = true;
+      request.include_serp_info = true;
+
+      // Call DataForSEO API
+      const result = await dataForSeoClient.serp as any).googleOrganicLiveAdvanced([request]);
+
+      // Process results
+      const taskResult = result.tasks?.[0]?.result?.[0];
+      
+      if (!taskResult) {
+        throw new Error('No results returned from DataForSEO');
+      }
+
+      // Extract People Also Ask questions
+      const paaItems = (taskResult.items || []).filter((item: any) => item.type === 'people_also_ask');
+      const questions = paaItems.map((item: any) => ({
+        question: item.question || '',
+        answer: item.answer || '',
+        source: {
+          title: item.source?.title || '',
+          url: item.source?.url || '',
+          domain: item.source?.domain || ''
+        },
+        related_questions: item.related_questions || []
+      }));
+
+      // Extract organic results
+      const organicResults = (taskResult.items || [])
+        .filter((item: any) => item.type === 'organic')
+        .map((item: any) => ({
+          position: item.rank_group || 0,
+          title: item.title || '',
+          url: item.url || '',
+          domain: item.domain || '',
+          description: item.description || ''
+        }));
+
+      const processedResult = {
+        keyword: keyword.trim(),
+        location,
+        language,
+        total_questions: questions.length,
+        questions,
+        organic_results: organicResults,
+        search_time: taskResult.search_time || new Date().toISOString()
+      };
+
+      // Update analysis with results
+      await updateAnalysis(analysisRecord.id, {
+        status: 'completed',
+        result: processedResult
+      });
+
+      // Deduct credits
+      await deductCredits(user.id, requiredCredits);
+
+      return NextResponse.json({
+        success: true,
+        data: processedResult,
+        analysisId: analysisRecord.id,
+        creditsUsed: requiredCredits
+      });
+
+    } catch (apiError) {
+      logger.error('DataForSEO API Error:', apiError);
+      
+      // Update analysis with error
+      await updateAnalysis(analysisRecord.id, {
+        status: 'failed',
+        result: { error: 'API call failed' }
+      });
+
+      return NextResponse.json(
+        { 
+          error: 'Failed to fetch People Also Ask data. Please try again.',
+          success: false 
+        },
+        { status: 500 }
+      );
+    }
+
+  } catch (error) {
+    logger.error('People Also Ask API Error:', error);
+    
+    if (error instanceof Error && error.message.includes('Insufficient credits')) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 402 }
+      );
+    }
+    
+    return NextResponse.json(
+      { 
+        error: error instanceof Error ? error.message : 'Internal server error',
+        success: false 
+      },
+      { status: 500 }
+    );
+  }
+}

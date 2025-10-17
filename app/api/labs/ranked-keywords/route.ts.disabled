@@ -1,0 +1,138 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getUser } from '@/lib/supabase/server';
+import { checkUserCredits, deductCredits, saveAnalysis, updateAnalysis } from '@/lib/utils/analysis';
+import { dataForSeoClient } from '@/lib/dataforseo/client';
+
+export async function POST(request: NextRequest) {
+  try {
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { domain, location_code, language_code, limit, include_serp_info } = body;
+
+    if (!domain) {
+      return NextResponse.json({ error: 'Domain ist erforderlich' }, { status: 400 });
+    }
+
+    // Credits prüfen (2 Credits für Ranked Keywords)
+    const hasCredits = await checkUserCredits(user.id, 2);
+    if (!hasCredits) {
+      return NextResponse.json({ error: 'Nicht genügend Credits verfügbar' }, { status: 402 });
+    }
+
+    // Analysis-Eintrag erstellen
+    const analysisId = await saveAnalysis(
+      {
+        domain,
+        location_code: parseInt(location_code),
+        language_code,
+        limit: parseInt(limit),
+        include_serp_info
+      },
+      'labs_ranked_keywords',
+      user.id,
+      undefined,
+      1
+    );
+
+    try {
+      // DataForSEO Labs API aufrufen
+      const response = await dataForSeoClient.labs as any).googleRankedKeywordsLive([
+        {
+          target: domain,
+          location_code: parseInt(location_code),
+          language_code,
+          limit: parseInt(limit),
+          include_serp_info: include_serp_info || true
+        } as any
+      ]);
+
+      if (!response || !response.results || response.results.length === 0) {
+        throw new Error('Keine Ranked Keywords Daten erhalten');
+      }
+
+      const result = response.results[0];
+      
+      // Ergebnisse verarbeiten
+      const processedResults = result.items?.map((item: any) => ({
+        keyword: item.keyword_data?.keyword || '',
+        search_volume: item.keyword_data?.search_volume || 0,
+        competition: item.keyword_data?.competition || 0,
+        cpc: item.keyword_data?.cpc || 0,
+        difficulty: item.keyword_data?.keyword_difficulty || 0,
+        position: item.ranked_serp_element?.serp_item?.rank_group || 0,
+        url: item.ranked_serp_element?.serp_item?.url || '',
+        serp_features: extractSerpFeatures(item.ranked_serp_element?.serp_item)
+      })).filter((item: any) => item.keyword && item.position > 0) || [];
+
+      // Nach Position sortieren (beste Position zuerst)
+      processedResults.sort((a: any, b: any) => a.position - b.position);
+
+      // Credits abziehen
+      await deductCredits(user.id, 2);
+
+      // Analysis updaten
+      await updateAnalysis(analysisId, {
+        status: 'completed',
+        result: {
+          total_keywords: processedResults.length,
+          domain,
+          top_positions: processedResults.filter((r: any) => r.position <= 10).length,
+          results: processedResults.slice(0, parseInt(limit))
+        }
+      });
+
+      return NextResponse.json({
+        success: true,
+        analysis_id: analysisId,
+        results: processedResults.slice(0, parseInt(limit)),
+        total_keywords: processedResults.length,
+        top_positions: processedResults.filter((r: any) => r.position <= 10).length
+      });
+
+    } catch (error) {
+      console.error('DataForSEO API Error:', error);
+      
+      // Analysis als fehlgeschlagen markieren
+      await updateAnalysis(analysisId, {
+        status: 'failed',
+        result: { error: error instanceof Error ? error.message : 'Unbekannter Fehler' }
+      });
+
+      return NextResponse.json({ 
+        error: 'Fehler bei der Ranked Keywords Analyse',
+        details: error instanceof Error ? error.message : 'Unbekannter Fehler'
+      }, { status: 500 });
+    }
+
+  } catch (error) {
+    console.error('Ranked Keywords API Error:', error);
+    return NextResponse.json({ 
+      error: 'Interner Serverfehler',
+      details: error instanceof Error ? error.message : 'Unbekannter Fehler'
+    }, { status: 500 });
+  }
+}
+
+function extractSerpFeatures(serpItem: any): string[] {
+  const features: string[] = [];
+  
+  if (!serpItem) return features;
+  
+  // Verschiedene SERP Features erkennen
+  if (serpItem.featured_snippet) features.push('Featured Snippet');
+  if (serpItem.people_also_ask) features.push('People Also Ask');
+  if (serpItem.related_searches) features.push('Related Searches');
+  if (serpItem.local_pack) features.push('Local Pack');
+  if (serpItem.knowledge_graph) features.push('Knowledge Graph');
+  if (serpItem.video) features.push('Video');
+  if (serpItem.image) features.push('Image');
+  if (serpItem.news) features.push('News');
+  if (serpItem.shopping) features.push('Shopping');
+  if (serpItem.maps) features.push('Maps');
+  
+  return features;
+}

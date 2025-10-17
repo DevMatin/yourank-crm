@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,11 @@ import {
   Hash,
   Target,
   Calendar,
-  Eye
+  Eye,
+  History,
+  Clock,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { KeywordMetricsCard } from '@/components/keywords/keyword-metrics-card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -57,6 +61,44 @@ export default function KeywordOverviewPage() {
   const [error, setError] = useState('');
   const [results, setResults] = useState<KeywordOverview[]>([]);
   const [analysisId, setAnalysisId] = useState<string | null>(null);
+  const [searchHistory, setSearchHistory] = useState<Array<{
+    keyword: string;
+    location: string;
+    language: string;
+    timestamp: string;
+    resultsCount: number;
+    results: KeywordOverview[];
+    analysisId: string;
+  }>>([]);
+  const [expandedHistory, setExpandedHistory] = useState<number | null>(null);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+
+  // Load search history on component mount
+  useEffect(() => {
+    const loadSearchHistory = async () => {
+      try {
+        const response = await fetch('/api/analysis/history?type=keywords_overview&limit=10');
+        if (response.ok) {
+          const data = await response.json();
+          const historyData = data.analyses?.map((analysis: any) => ({
+            keyword: analysis.input?.keyword || analysis.parameters?.keyword || 'Unbekanntes Keyword',
+            location: analysis.input?.location || analysis.parameters?.location || 'Deutschland',
+            language: analysis.input?.language || analysis.parameters?.language || 'Deutsch',
+            timestamp: new Date(analysis.created_at).toLocaleString('de-DE'),
+            resultsCount: analysis.result?.length || 0,
+            results: analysis.result || [],
+            analysisId: analysis.id
+          })) || [];
+          setSearchHistory(historyData);
+        }
+      } catch (error) {
+        console.error('Failed to load search history:', error);
+      } finally {
+        setLoadingHistory(false);
+      }
+    };
+    loadSearchHistory();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,11 +127,34 @@ export default function KeywordOverviewPage() {
 
       setResults(data.data || []);
       setAnalysisId(data.analysisId);
+
+      // Add to search history
+      if (data.data && data.data.length > 0) {
+        const newHistoryItem = {
+          keyword: keyword.trim(),
+          location,
+          language,
+          timestamp: new Date().toLocaleString('de-DE'),
+          resultsCount: data.data.length,
+          results: data.data,
+          analysisId: data.analysisId
+        };
+        setSearchHistory(prev => [newHistoryItem, ...prev.slice(0, 9)]);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ein unerwarteter Fehler ist aufgetreten');
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadHistoryResults = (historyItem: any) => {
+    setKeyword(historyItem.keyword);
+    setLocation(historyItem.location);
+    setLanguage(historyItem.language);
+    setResults(historyItem.results);
+    setAnalysisId(historyItem.analysisId);
+    setExpandedHistory(null);
   };
 
   const getCompetitionLevel = (competition: number) => {
@@ -254,6 +319,14 @@ export default function KeywordOverviewPage() {
               <p className="text-muted-foreground">
                 Umfassende Analyse für "{keyword}"
               </p>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="outline" className="text-xs">
+                  📊 DataForSEO API
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  📈 googleKeywordOverviewLive
+                </Badge>
+              </div>
             </div>
             
             <div className="flex gap-2">
@@ -446,6 +519,211 @@ export default function KeywordOverviewPage() {
             );
           })}
         </div>
+      )}
+
+      {/* Search History */}
+      {loadingHistory ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Vorherige Suchen
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span className="text-muted-foreground">Lade Suchhistorie...</span>
+            </div>
+          </CardContent>
+        </Card>
+      ) : searchHistory.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Vorherige Suchen
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {searchHistory.map((item, index) => (
+              <div key={item.analysisId} className="border rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Hash className="h-4 w-4 text-primary" />
+                      <span className="font-medium">{item.keyword}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {item.location}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {item.language}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {item.timestamp}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        {item.resultsCount} Übersichten
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => loadHistoryResults(item)}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      Anzeigen
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setExpandedHistory(expandedHistory === index ? null : index)}
+                    >
+                      {expandedHistory === index ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                
+                {expandedHistory === index && (
+                  <div className="mt-4 pt-4 border-t">
+                    {item.results.map((result, idx) => {
+                      const competitionInfo = getCompetitionLevel(result.competition);
+                      const chartData = prepareChartData(result.keyword_info?.monthly_searches || []);
+                      
+                      return (
+                        <div key={idx} className="space-y-4">
+                          {/* Main Keyword Info */}
+                          <Card>
+                            <CardHeader>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <Hash className="h-5 w-5 text-primary" />
+                                  <CardTitle className="text-lg">{result.keyword}</CardTitle>
+                                </div>
+                                <Badge 
+                                  variant="secondary" 
+                                  className={`${competitionInfo.color} text-white`}
+                                >
+                                  {competitionInfo.level}
+                                </Badge>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              {/* Key Metrics */}
+                              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <KeywordMetricsCard
+                                  title="Suchvolumen"
+                                  value={result.search_volume.toLocaleString()}
+                                  icon={Eye}
+                                  description="Monatliche Suchanfragen"
+                                />
+                                <KeywordMetricsCard
+                                  title="Konkurrenz"
+                                  value={`${Math.round(result.competition * 100)}%`}
+                                  icon={Target}
+                                  description={competitionInfo.description}
+                                />
+                                <KeywordMetricsCard
+                                  title="CPC"
+                                  value={`$${result.cpc.toFixed(2)}`}
+                                  icon={Globe}
+                                  description="Kosten pro Klick"
+                                />
+                                <KeywordMetricsCard
+                                  title="Trend"
+                                  value={`${result.trend > 0 ? '+' : ''}${result.trend.toFixed(1)}%`}
+                                  icon={TrendingUp}
+                                  description="Suchvolumen-Trend"
+                                />
+                              </div>
+
+                              {/* Competition Progress */}
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium">Konkurrenz-Level</span>
+                                  <span className="text-sm text-muted-foreground">{competitionInfo.description}</span>
+                                </div>
+                                <Progress value={result.competition * 100} className="h-3" />
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          {/* Monthly Search Volume Chart */}
+                          {chartData.length > 0 && (
+                            <Card>
+                              <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                  <Calendar className="h-5 w-5" />
+                                  Monatliches Suchvolumen
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <ResponsiveContainer width="100%" height={200}>
+                                  <LineChart data={chartData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis 
+                                      dataKey="date" 
+                                      tick={{ fontSize: 10 }}
+                                    />
+                                    <YAxis tick={{ fontSize: 10 }} />
+                                    <Tooltip 
+                                      contentStyle={{
+                                        backgroundColor: 'hsl(var(--card))',
+                                        border: '1px solid hsl(var(--border))',
+                                        borderRadius: '6px',
+                                      }}
+                                    />
+                                    <Line 
+                                      type="monotone" 
+                                      dataKey="volume" 
+                                      stroke="hsl(var(--primary))" 
+                                      strokeWidth={2}
+                                      dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 3 }}
+                                    />
+                                  </LineChart>
+                                </ResponsiveContainer>
+                              </CardContent>
+                            </Card>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Vorherige Suchen
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">
+                Noch keine vorherigen Suchen vorhanden.
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Führe deine erste Keyword-Übersicht-Analyse durch, um hier Ergebnisse zu sehen.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

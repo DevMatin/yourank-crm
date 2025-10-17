@@ -55,7 +55,7 @@ export default function ProjectsPage() {
           .order('created_at', { ascending: false });
 
         if (projectsData) {
-          const projectsWithStats: ProjectWithStats[] = projectsData.map(project => {
+          const projectsWithStats: ProjectWithStats[] = projectsData.map((project: any) => {
             const analyses = project.analyses as DatabaseAnalysis[] || [];
             const lastAnalysis = analyses.length > 0 
               ? analyses.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at

@@ -43,8 +43,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const { subscribeToAnalyses, subscribeToUserUpdates } = useRealtime();
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
+  // Fetch dashboard data function
+  const fetchDashboardData = async () => {
       try {
         const supabase = createClient();
         
@@ -52,14 +52,40 @@ export default function DashboardPage() {
         const { data: { user: authUser } } = await supabase.auth.getUser();
         if (!authUser) return;
 
-        const { data: userData } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', authUser.id)
-          .single();
+        try {
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', authUser.id)
+            .single();
 
-        if (userData) {
-          setUser(userData);
+          if (userError) {
+            console.error('Error fetching user data:', userError);
+            // Fallback: create user from auth data
+            setUser({
+              id: authUser.id,
+              email: authUser.email || '',
+              name: authUser.user_metadata?.name || null,
+              credits: 100,
+              plan: 'free',
+              created_at: authUser.created_at || new Date().toISOString(),
+              updated_at: authUser.updated_at || new Date().toISOString()
+            });
+          } else if (userData) {
+            setUser(userData);
+          }
+        } catch (userFetchError) {
+          console.error('User fetch failed:', userFetchError);
+          // Fallback: create user from auth data
+          setUser({
+            id: authUser.id,
+            email: authUser.email || '',
+            name: authUser.user_metadata?.name || null,
+            credits: 100,
+            plan: 'free',
+            created_at: authUser.created_at || new Date().toISOString(),
+            updated_at: authUser.updated_at || new Date().toISOString()
+          });
         }
 
         // Get stats
@@ -67,21 +93,29 @@ export default function DashboardPage() {
         currentMonth.setDate(1);
         currentMonth.setHours(0, 0, 0, 0);
 
-        const { data: analysesData } = await supabase
+        const { data: analysesData, error: analysesError } = await supabase
           .from('analyses')
           .select('credits_used, created_at')
           .eq('user_id', authUser.id);
 
-        const { data: projectsData } = await supabase
+        if (analysesError) {
+          console.error('Error fetching analyses data:', analysesError);
+        }
+
+        const { data: projectsData, error: projectsError } = await supabase
           .from('projects')
           .select('id')
           .eq('user_id', authUser.id);
 
+        if (projectsError) {
+          console.error('Error fetching projects data:', projectsError);
+        }
+
         // Calculate stats
         const totalAnalyses = analysesData?.length || 0;
-        const totalCreditsUsed = analysesData?.reduce((sum, a) => sum + a.credits_used, 0) || 0;
+        const totalCreditsUsed = analysesData?.reduce((sum: number, a: any) => sum + a.credits_used, 0) || 0;
         const activeProjects = projectsData?.length || 0;
-        const analysesThisMonth = analysesData?.filter(a => 
+        const analysesThisMonth = analysesData?.filter((a: any) => 
           new Date(a.created_at) >= currentMonth
         ).length || 0;
 
@@ -93,21 +127,39 @@ export default function DashboardPage() {
         });
 
         // Get recent analyses
-        const { data: recentData } = await supabase
-          .from('analyses')
-          .select(`
-            *,
-            projects (
-              id,
-              name,
-              domain
-            )
-          `)
-          .eq('user_id', authUser.id)
-          .order('created_at', { ascending: false })
-          .limit(5);
+        try {
+          const { data: recentData, error: recentError } = await supabase
+            .from('analyses')
+            .select(`
+              *,
+              projects (
+                id,
+                name,
+                domain
+              )
+            `)
+            .eq('user_id', authUser.id)
+            .order('created_at', { ascending: false })
+            .limit(5);
 
-        setRecentAnalyses(recentData || []);
+          if (recentError) {
+            console.error('Error fetching recent analyses:', recentError);
+            // Fallback: get analyses without projects join
+            const { data: fallbackData } = await supabase
+              .from('analyses')
+              .select('*')
+              .eq('user_id', authUser.id)
+              .order('created_at', { ascending: false })
+              .limit(5);
+            
+            setRecentAnalyses(fallbackData || []);
+          } else {
+            setRecentAnalyses(recentData || []);
+          }
+        } catch (recentFetchError) {
+          console.error('Recent analyses fetch failed:', recentFetchError);
+          setRecentAnalyses([]);
+        }
 
         // Generate activity data (last 7 days)
         const activityData: ActivityData[] = [];
@@ -119,7 +171,7 @@ export default function DashboardPage() {
             month: '2-digit' 
           });
 
-          const dayAnalyses = analysesData?.filter(a => {
+          const dayAnalyses = analysesData?.filter((a: any) => {
             const analysisDate = new Date(a.created_at);
             return analysisDate.toDateString() === date.toDateString();
           }) || [];
@@ -127,7 +179,7 @@ export default function DashboardPage() {
           activityData.push({
             date: dateStr,
             analyses: dayAnalyses.length,
-            credits: dayAnalyses.reduce((sum, a) => sum + a.credits_used, 0)
+            credits: dayAnalyses.reduce((sum: number, a: any) => sum + a.credits_used, 0)
           });
         }
 
@@ -140,6 +192,7 @@ export default function DashboardPage() {
       }
     };
 
+  useEffect(() => {
     fetchDashboardData();
   }, []);
 

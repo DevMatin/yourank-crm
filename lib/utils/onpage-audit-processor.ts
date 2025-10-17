@@ -74,7 +74,7 @@ export async function processOnPageAuditResult(taskId: string, taskResult: any, 
     
     await updateAnalysis(analysisId, {
       status: 'failed',
-      error: error instanceof Error ? error.message : 'Fehler beim Verarbeiten der Ergebnisse'
+      result: { error: error instanceof Error ? error.message : 'Fehler beim Verarbeiten der Ergebnisse' }
     });
 
     throw error;

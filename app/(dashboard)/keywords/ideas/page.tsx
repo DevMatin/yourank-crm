@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,12 @@ import {
   Download,
   Loader2,
   Hash,
-  Lightbulb
+  Lightbulb,
+  History,
+  Clock,
+  Eye,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { KeywordMetricsCard } from '@/components/keywords/keyword-metrics-card';
 
@@ -48,6 +53,44 @@ export default function KeywordIdeasPage() {
   const [error, setError] = useState('');
   const [results, setResults] = useState<KeywordIdea[]>([]);
   const [analysisId, setAnalysisId] = useState<string | null>(null);
+  const [searchHistory, setSearchHistory] = useState<Array<{
+    keyword: string;
+    location: string;
+    language: string;
+    timestamp: string;
+    resultsCount: number;
+    results: KeywordIdea[];
+    analysisId: string;
+  }>>([]);
+  const [expandedHistory, setExpandedHistory] = useState<number | null>(null);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+
+  // Load search history on component mount
+  useEffect(() => {
+    const loadSearchHistory = async () => {
+      try {
+        const response = await fetch('/api/analysis/history?type=keywords_ideas&limit=10');
+        if (response.ok) {
+          const data = await response.json();
+          const historyData = data.analyses?.map((analysis: any) => ({
+            keyword: analysis.input?.keyword || analysis.parameters?.keyword || 'Unbekanntes Keyword',
+            location: analysis.input?.location || analysis.parameters?.location || 'Deutschland',
+            language: analysis.input?.language || analysis.parameters?.language || 'Deutsch',
+            timestamp: new Date(analysis.created_at).toLocaleString('de-DE'),
+            resultsCount: analysis.result?.length || 0,
+            results: analysis.result || [],
+            analysisId: analysis.id
+          })) || [];
+          setSearchHistory(historyData);
+        }
+      } catch (error) {
+        console.error('Failed to load search history:', error);
+      } finally {
+        setLoadingHistory(false);
+      }
+    };
+    loadSearchHistory();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,11 +120,34 @@ export default function KeywordIdeasPage() {
 
       setResults(data.data || []);
       setAnalysisId(data.analysisId);
+
+      // Add to search history
+      if (data.data && data.data.length > 0) {
+        const newHistoryItem = {
+          keyword: keyword.trim(),
+          location,
+          language,
+          timestamp: new Date().toLocaleString('de-DE'),
+          resultsCount: data.data.length,
+          results: data.data,
+          analysisId: data.analysisId
+        };
+        setSearchHistory(prev => [newHistoryItem, ...prev.slice(0, 9)]);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ein unerwarteter Fehler ist aufgetreten');
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadHistoryResults = (historyItem: any) => {
+    setKeyword(historyItem.keyword);
+    setLocation(historyItem.location);
+    setLanguage(historyItem.language);
+    setResults(historyItem.results);
+    setAnalysisId(historyItem.analysisId);
+    setExpandedHistory(null);
   };
 
   const exportResults = (format: 'csv' | 'json') => {
@@ -239,6 +305,14 @@ export default function KeywordIdeasPage() {
               <p className="text-muted-foreground">
                 {results.length} kreative Ideen für "{keyword}" gefunden
               </p>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="outline" className="text-xs">
+                  📊 DataForSEO API
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  💡 googleKeywordIdeasLive
+                </Badge>
+              </div>
             </div>
             
             <div className="flex gap-2">
@@ -351,6 +425,186 @@ export default function KeywordIdeasPage() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Search History */}
+      {loadingHistory ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Vorherige Suchen
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span className="text-muted-foreground">Lade Suchhistorie...</span>
+            </div>
+          </CardContent>
+        </Card>
+      ) : searchHistory.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Vorherige Suchen
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {searchHistory.map((item, index) => (
+              <div key={item.analysisId} className="border rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Hash className="h-4 w-4 text-primary" />
+                      <span className="font-medium">{item.keyword}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {item.location}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {item.language}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {item.timestamp}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        {item.resultsCount} Ideen
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => loadHistoryResults(item)}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      Anzeigen
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setExpandedHistory(expandedHistory === index ? null : index)}
+                    >
+                      {expandedHistory === index ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                
+                {expandedHistory === index && (
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                      <KeywordMetricsCard
+                        title="Durchschnittliches Suchvolumen"
+                        value={Math.round(item.results.reduce((sum, r) => sum + r.search_volume, 0) / item.results.length).toLocaleString()}
+                        icon={TrendingUp}
+                      />
+                      <KeywordMetricsCard
+                        title="Durchschnittliche Konkurrenz"
+                        value={`${Math.round(item.results.reduce((sum, r) => sum + r.competition, 0) / item.results.length * 100)}%`}
+                        icon={Hash}
+                      />
+                      <KeywordMetricsCard
+                        title="Durchschnittlicher CPC"
+                        value={`$${(item.results.reduce((sum, r) => sum + r.cpc, 0) / item.results.length).toFixed(2)}`}
+                        icon={Globe}
+                      />
+                      <KeywordMetricsCard
+                        title="Positive Trends"
+                        value={`${item.results.filter(r => r.trend > 0).length}/${item.results.length}`}
+                        icon={TrendingUp}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {item.results.slice(0, 6).map((result, idx) => (
+                        <Card key={idx} className="hover:shadow-md transition-shadow">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-2">
+                                <Hash className="h-4 w-4 text-primary" />
+                                <CardTitle className="text-base">{result.keyword}</CardTitle>
+                              </div>
+                              <Badge 
+                                variant="secondary" 
+                                className={
+                                  result.competition < 0.3 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : result.competition < 0.7 
+                                    ? 'bg-yellow-100 text-yellow-800' 
+                                    : 'bg-red-100 text-red-800'
+                                }
+                              >
+                                {result.competition < 0.3 ? 'Niedrig' : result.competition < 0.7 ? 'Mittel' : 'Hoch'}
+                              </Badge>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">Suchvolumen:</span>
+                                <div className="font-medium">{result.search_volume.toLocaleString()}</div>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">CPC:</span>
+                                <div className="font-medium">${result.cpc.toFixed(2)}</div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-muted-foreground">Trend:</span>
+                              <div className="flex items-center gap-1">
+                                {result.trend > 0 ? (
+                                  <TrendingUp className="h-3 w-3 text-green-600" />
+                                ) : result.trend < 0 ? (
+                                  <TrendingUp className="h-3 w-3 text-red-600 rotate-180" />
+                                ) : (
+                                  <div className="h-3 w-3 bg-gray-400 rounded-full" />
+                                )}
+                                <span className="text-sm font-medium">
+                                  {result.trend > 0 ? '+' : ''}{result.trend.toFixed(1)}%
+                                </span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Vorherige Suchen
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">
+                Noch keine vorherigen Suchen vorhanden.
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Führe deine erste Keyword-Ideen-Suche durch, um hier Ergebnisse zu sehen.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

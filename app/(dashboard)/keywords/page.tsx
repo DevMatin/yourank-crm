@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Hash, Search, TrendingUp, Brain, BarChart3 } from 'lucide-react';
+import { Hash, Search, TrendingUp, Brain, BarChart3, Zap, Package, Users, Layers, Map, Target } from 'lucide-react';
 import Link from 'next/link';
 
 const tools = [
@@ -51,6 +51,105 @@ const tools = [
     credits: 2,
     status: 'active',
     href: '/keywords/overview'
+  },
+  {
+    id: 'google-ads-keywords-for-keywords',
+    name: 'Google Ads Keywords for Keywords',
+    description: 'Keyword-Ideen basierend auf Google Ads Daten',
+    icon: Hash,
+    credits: 2,
+    status: 'active',
+    href: '/keywords/google-ads-keywords-for-keywords'
+  },
+  {
+    id: 'bing-keywords-for-keywords',
+    name: 'Bing Keywords for Keywords',
+    description: 'Bing-spezifische Keyword-Vorschläge mit Device-Filter',
+    icon: Hash,
+    credits: 1,
+    status: 'active',
+    href: '/keywords/bing-keywords-for-keywords'
+  },
+  {
+    id: 'google-ads-ad-traffic',
+    name: 'Google Ads Ad Traffic',
+    description: 'Traffic-Schätzungen für Keywords basierend auf Geboten',
+    icon: TrendingUp,
+    credits: 3,
+    status: 'active',
+    href: '/keywords/google-ads-ad-traffic'
+  },
+  {
+    id: 'bing-keyword-performance',
+    name: 'Bing Keyword Performance',
+    description: 'Performance-Metriken für Bing Keywords mit Filtern',
+    icon: TrendingUp,
+    credits: 2,
+    status: 'active',
+    href: '/keywords/bing-keyword-performance'
+  },
+  {
+    id: 'bing-search-volume-history',
+    name: 'Bing Search Volume History',
+    description: 'Historische Suchvolumen-Daten mit monatlichen Zeitreihen',
+    icon: BarChart3,
+    credits: 2,
+    status: 'active',
+    href: '/keywords/bing-search-volume-history'
+  },
+  {
+    id: 'clickstream-dataforseo-search-volume',
+    name: 'Clickstream DataForSEO Search Volume',
+    description: 'DataForSEO-eigene Suchvolumen-Berechnung',
+    icon: Zap,
+    credits: 2,
+    status: 'active',
+    href: '/keywords/clickstream-dataforseo-search-volume'
+  },
+  {
+    id: 'clickstream-bulk-search-volume',
+    name: 'Clickstream Bulk Search Volume',
+    description: 'Bulk-Verarbeitung für große Keyword-Mengen',
+    icon: Package,
+    credits: 1,
+    status: 'active',
+    href: '/keywords/clickstream-bulk-search-volume'
+  },
+  {
+    id: 'dataforseo-trends-demography',
+    name: 'DataForSEO Trends Demography',
+    description: 'Demografische Trend-Analyse mit Alters- und Geschlechts-Daten',
+    icon: Users,
+    credits: 3,
+    status: 'active',
+    href: '/keywords/dataforseo-trends-demography'
+  },
+  {
+    id: 'dataforseo-trends-merged-data',
+    name: 'DataForSEO Trends Merged Data',
+    description: 'Kombinierte Trend-Daten aus verschiedenen Quellen',
+    icon: Layers,
+    credits: 3,
+    status: 'active',
+    href: '/keywords/dataforseo-trends-merged-data'
+  },
+  {
+    id: 'dataforseo-trends-subregion-interests',
+    name: 'DataForSEO Trends Subregion Interests',
+    description: 'Regionale Interessen-Trends auf Subregion-Ebene',
+    icon: Map,
+    credits: 3,
+    status: 'active',
+    href: '/keywords/dataforseo-trends-subregion-interests'
+  },
+  {
+    id: 'bing-audience-estimation',
+    name: 'Bing Audience Estimation',
+    description: 'LinkedIn Ads Audience Targeting Schätzungen',
+    icon: Target,
+    credits: 5,
+    status: 'active',
+    href: '/keywords/bing-audience-estimation'
   }
 ];
 
