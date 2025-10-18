@@ -410,7 +410,7 @@ export default function KeywordSuggestionsPage() {
                             ) : item.trend < 0 ? (
                               <TrendingUp className="h-4 w-4 text-red-600 rotate-180" />
                             ) : (
-                              <div className="h-4 w-4 bg-gray-400 rounded-full" />
+                              <div className="h-4 w-4 bg-muted rounded-full" />
                             )}
                             <span className="text-sm">
                               {item.trend > 0 ? '+' : ''}{item.trend.toFixed(1)}%
@@ -593,7 +593,7 @@ export default function KeywordSuggestionsPage() {
                                           ) : item.trend < 0 ? (
                                             <TrendingUp className="h-4 w-4 text-red-600 rotate-180" />
                                           ) : (
-                                            <div className="h-4 w-4 bg-gray-400 rounded-full" />
+                                            <div className="h-4 w-4 bg-muted rounded-full" />
                                           )}
                                           <span className="text-sm">
                                             {item.trend > 0 ? '+' : ''}{item.trend.toFixed(1)}%

@@ -4,7 +4,7 @@ export interface Tool {
   description: string;
   credits: number;
   endpoint: string;
-  status: 'active' | 'coming_soon' | 'beta';
+  status: 'active' | 'coming_soon' | 'beta' | 'deprecated';
 }
 
 export interface Module {
@@ -61,13 +61,64 @@ export const modules: Module[] = [
     basePath: "/keywords",
     color: "green",
     tools: [
+      // ===== NEUE HAUPTKATEGORIEN (SEMrush-Style) =====
+      {
+        id: "overview",
+        name: "Overview",
+        description: "All-in-One Keyword Zusammenfassung",
+        credits: 3,
+        endpoint: "/v3/combined/overview",
+        status: "active"
+      },
+      {
+        id: "research",
+        name: "Research",
+        description: "Keyword-Ideen und Vorschläge",
+        credits: 1,
+        endpoint: "/v3/combined/research",
+        status: "active"
+      },
+      {
+        id: "competition",
+        name: "Competition",
+        description: "Keyword-Schwierigkeit und Wettbewerb",
+        credits: 2,
+        endpoint: "/v3/combined/competition",
+        status: "active"
+      },
+      {
+        id: "performance",
+        name: "Performance",
+        description: "Traffic und Clickstream-Daten",
+        credits: 2,
+        endpoint: "/v3/combined/performance",
+        status: "active"
+      },
+      {
+        id: "trends",
+        name: "Trends",
+        description: "Trend-Analysen und Demografie",
+        credits: 2,
+        endpoint: "/v3/combined/trends",
+        status: "active"
+      },
+      {
+        id: "audience",
+        name: "Audience",
+        description: "Zielgruppen und Targeting",
+        credits: 2,
+        endpoint: "/v3/combined/audience",
+        status: "active"
+      },
+      
+      // ===== LEGACY TOOLS (Deprecated) =====
       {
         id: "related",
         name: "Related Keywords",
         description: "Finde verwandte Keywords zu deinem Suchbegriff",
         credits: 1,
         endpoint: "/v3/keywords_data/related_keywords/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "suggestions",
@@ -75,7 +126,7 @@ export const modules: Module[] = [
         description: "Automatische Keyword-Vorschläge",
         credits: 1,
         endpoint: "/v3/keywords_data/google_ads/search_volume/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "ideas",
@@ -83,7 +134,7 @@ export const modules: Module[] = [
         description: "Kreative Keyword-Ideen generieren",
         credits: 1,
         endpoint: "/v3/keywords_data/google_ads/keywords_for_keywords/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "difficulty",
@@ -91,15 +142,15 @@ export const modules: Module[] = [
         description: "Bewerte die Schwierigkeit von Keywords",
         credits: 1,
         endpoint: "/v3/keywords_data/google_ads/keyword_difficulty/live",
-        status: "active"
+        status: "deprecated"
       },
       {
-        id: "overview",
-        name: "Keyword Overview",
+        id: "overview-legacy",
+        name: "Keyword Overview (Legacy)",
         description: "Umfassende Keyword-Analyse",
         credits: 2,
         endpoint: "/v3/keywords_data/google_ads/search_volume/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "google-ads-search-volume",
@@ -107,7 +158,7 @@ export const modules: Module[] = [
         description: "Präzise Google Ads Suchvolumen-Daten",
         credits: 2,
         endpoint: "/v3/keywords_data/google_ads/search_volume/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "google-trends-explore",
@@ -115,7 +166,7 @@ export const modules: Module[] = [
         description: "Trend-Analysen und Suchvolumen-Trends",
         credits: 3,
         endpoint: "/v3/keywords_data/google_trends/explore/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "bing-search-volume",
@@ -123,7 +174,7 @@ export const modules: Module[] = [
         description: "Bing-spezifische Suchvolumen-Daten",
         credits: 1,
         endpoint: "/v3/keywords_data/bing/search_volume/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "google-ads-keywords-for-site",
@@ -131,7 +182,7 @@ export const modules: Module[] = [
         description: "Keywords die für eine Website relevant sind",
         credits: 5,
         endpoint: "/v3/keywords_data/google_ads/keywords_for_site/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "bing-keywords-for-site",
@@ -139,7 +190,7 @@ export const modules: Module[] = [
         description: "Bing Keywords für eine bestimmte Website",
         credits: 3,
         endpoint: "/v3/keywords_data/bing/keywords_for_site/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "clickstream-global-search-volume",
@@ -147,7 +198,7 @@ export const modules: Module[] = [
         description: "Erweiterte Clickstream Suchvolumen-Daten",
         credits: 2,
         endpoint: "/v3/keywords_data/clickstream_data/global_search_volume/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "google-ads-keywords-for-keywords",
@@ -155,7 +206,7 @@ export const modules: Module[] = [
         description: "Keyword-Ideen basierend auf Google Ads Daten",
         credits: 2,
         endpoint: "/v3/keywords_data/google_ads/keywords_for_keywords/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "bing-keywords-for-keywords",
@@ -163,7 +214,7 @@ export const modules: Module[] = [
         description: "Bing-spezifische Keyword-Vorschläge",
         credits: 1,
         endpoint: "/v3/keywords_data/bing/keywords_for_keywords/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "google-ads-ad-traffic",
@@ -171,7 +222,7 @@ export const modules: Module[] = [
         description: "Traffic-Schätzungen für Keywords basierend auf Geboten",
         credits: 3,
         endpoint: "/v3/keywords_data/google_ads/ad_traffic_by_keywords/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "bing-keyword-performance",
@@ -179,7 +230,7 @@ export const modules: Module[] = [
         description: "Performance-Metriken für Bing Keywords",
         credits: 2,
         endpoint: "/v3/keywords_data/bing/keyword_performance/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "bing-search-volume-history",
@@ -187,7 +238,7 @@ export const modules: Module[] = [
         description: "Historische Suchvolumen-Daten für Bing",
         credits: 2,
         endpoint: "/v3/keywords_data/bing/search_volume_history/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "clickstream-dataforseo-search-volume",
@@ -195,7 +246,7 @@ export const modules: Module[] = [
         description: "DataForSEO-eigene Suchvolumen-Berechnung",
         credits: 2,
         endpoint: "/v3/keywords_data/clickstream_data/dataforseo_search_volume/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "clickstream-bulk-search-volume",
@@ -203,7 +254,7 @@ export const modules: Module[] = [
         description: "Bulk-Verarbeitung von Clickstream Daten",
         credits: 1,
         endpoint: "/v3/keywords_data/clickstream_data/bulk_search_volume/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "dataforseo-trends-demography",
@@ -211,7 +262,7 @@ export const modules: Module[] = [
         description: "Demografische Trend-Analyse",
         credits: 3,
         endpoint: "/v3/keywords_data/dataforseo_trends/demography/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "dataforseo-trends-merged-data",
@@ -219,7 +270,7 @@ export const modules: Module[] = [
         description: "Kombinierte Trend-Daten",
         credits: 3,
         endpoint: "/v3/keywords_data/dataforseo_trends/merged_data/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "dataforseo-trends-subregion-interests",
@@ -227,7 +278,7 @@ export const modules: Module[] = [
         description: "Regionale Interessen-Trends",
         credits: 3,
         endpoint: "/v3/keywords_data/dataforseo_trends/subregion_interests/live",
-        status: "active"
+        status: "deprecated"
       },
       {
         id: "bing-audience-estimation",
@@ -235,7 +286,7 @@ export const modules: Module[] = [
         description: "LinkedIn Ads Audience Targeting",
         credits: 5,
         endpoint: "/v3/keywords_data/bing/audience_estimation/live",
-        status: "active"
+        status: "deprecated"
       }
     ]
   },
@@ -570,4 +621,16 @@ export const getToolById = (moduleId: string, toolId: string): Tool | undefined 
 
 export const getAllTools = (): Tool[] => {
   return modules.flatMap(module => module.tools);
+};
+
+export const getDeprecatedTools = (): Tool[] => {
+  return modules.flatMap(module => module.tools.filter(tool => tool.status === 'deprecated'));
+};
+
+export const getActiveTools = (): Tool[] => {
+  return modules.flatMap(module => module.tools.filter(tool => tool.status === 'active'));
+};
+
+export const getComingSoonTools = (): Tool[] => {
+  return modules.flatMap(module => module.tools.filter(tool => tool.status === 'coming_soon'));
 };

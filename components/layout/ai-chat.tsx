@@ -22,7 +22,10 @@ import {
   Target,
   Zap,
   Trash2,
-  RotateCcw
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+  MessageCircle
 } from 'lucide-react';
 import { modules } from '@/config/modules.config';
 
@@ -143,6 +146,23 @@ export function AIChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(true); // Standard: geschlossen
+  
+  // Lade Kollabierungs-Status aus localStorage
+  useEffect(() => {
+    const savedCollapsedState = localStorage.getItem('ai-chat-collapsed');
+    if (savedCollapsedState !== null) {
+      setIsCollapsed(JSON.parse(savedCollapsedState));
+    } else {
+      // Wenn kein gespeicherter Zustand existiert, Chat geschlossen lassen
+      setIsCollapsed(true);
+    }
+  }, []);
+  
+  // Speichere Kollabierungs-Status in localStorage
+  useEffect(() => {
+    localStorage.setItem('ai-chat-collapsed', JSON.stringify(isCollapsed));
+  }, [isCollapsed]);
   
   const initializeNewChat = useCallback(() => {
     const welcomeMessage: Message = {
@@ -237,8 +257,58 @@ export function AIChat() {
     initializeNewChat();
   };
 
+  const toggleChat = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
+  // Dünne Leiste wenn Chat kollabiert ist
+  if (isCollapsed) {
+    return (
+      <div className="flex h-full w-12 flex-col bg-card border-l transition-all duration-300 ease-in-out">
+        {/* Kollabierte Leiste */}
+        <div className="flex h-full flex-col items-center justify-between py-4">
+          <div className="flex flex-col items-center space-y-4">
+            <div 
+              className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity duration-200"
+              onClick={toggleChat}
+              title="AI Chat öffnen"
+            >
+              <Bot className="h-4 w-4 text-white" />
+            </div>
+            <div className="flex flex-col items-center space-y-2">
+              <div 
+                className="cursor-pointer hover:text-blue-500 transition-colors duration-200"
+                onClick={toggleChat}
+                title="AI Chat öffnen"
+              >
+                <MessageCircle className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <Badge 
+                variant="secondary" 
+                className="text-xs px-1 py-0 cursor-pointer hover:bg-blue-100 transition-colors duration-200"
+                onClick={toggleChat}
+                title="AI Chat öffnen"
+              >
+                {messages.length - 1}
+              </Badge>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleChat}
+            className="h-8 w-8 p-0 hover:bg-white/20 dark:hover:bg-white/10 transition-colors duration-200"
+            title="AI Chat öffnen"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-full w-80 flex-col bg-card border-l">
+    <div className="flex h-full w-80 flex-col bg-card border-l transition-all duration-300 ease-in-out">
       {/* Header */}
       <div className="flex h-16 items-center justify-between border-b px-4">
         <div className="flex items-center space-x-3">
@@ -266,10 +336,19 @@ export function AIChat() {
             variant="ghost"
             size="sm"
             onClick={clearChatHistory}
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 hover:bg-white/20 dark:hover:bg-white/10 transition-colors duration-200"
             title="Chat-Verlauf löschen"
           >
             <Trash2 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleChat}
+            className="h-8 w-8 p-0 hover:bg-white/20 dark:hover:bg-white/10 transition-colors duration-200"
+            title="AI Chat schließen"
+          >
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -285,7 +364,7 @@ export function AIChat() {
                 key={index}
                 variant="outline"
                 size="sm"
-                className="w-full justify-start text-xs h-8"
+                className="w-full justify-start text-xs h-8 hover:bg-white/20 dark:hover:bg-white/10 transition-colors duration-200"
                 onClick={() => handleQuickAction(action.text)}
               >
                 <Icon className="h-3 w-3 mr-2" />
@@ -351,6 +430,7 @@ export function AIChat() {
             size="sm"
             onClick={handleSendMessage}
             disabled={!inputValue.trim()}
+            className="disabled:opacity-50"
           >
             <Send className="h-4 w-4" />
           </Button>

@@ -13,7 +13,7 @@ export function DashboardClientLayout({
 }) {
   return (
     <RealtimeProvider>
-      <div className="flex h-screen bg-background">
+        <div className="flex h-screen bg-background transition-colors duration-300">
         {/* Linke Spalte: Sidebar */}
         <Sidebar />
         

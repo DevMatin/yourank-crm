@@ -47,7 +47,7 @@ export function RecentAnalysisCard({ analyses }: RecentAnalysisCardProps) {
         <CardTitle>Neueste Analysen</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {analyses.map((analysis) => {
             const [moduleId, toolId] = analysis.type.split('_');
             const moduleConfig = getModuleById(moduleId);
@@ -56,62 +56,69 @@ export function RecentAnalysisCard({ analyses }: RecentAnalysisCardProps) {
             return (
               <div
                 key={analysis.id}
-                className="flex items-center justify-between p-3 border rounded-lg"
+                className="flex items-center justify-between p-4 rounded-xl border transition-all hover:bg-white/20 dark:hover:bg-white/10"
+                style={{ borderColor: 'var(--border)' }}
               >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-medium text-sm">
+                {/* Left Section */}
+                <div className="flex items-center gap-4 flex-1">
+                  <div className="flex flex-col gap-1">
+                    {/* Title */}
+                    <span className="text-sm text-foreground">
                       {tool?.name || analysis.type}
-                    </h4>
-                    <Badge
-                      variant={
-                        analysis.status === 'completed'
-                          ? 'default'
-                          : analysis.status === 'failed'
-                          ? 'destructive'
-                          : 'secondary'
-                      }
-                      className="text-xs"
-                    >
-                      {analysis.status === 'completed' && 'Abgeschlossen'}
-                      {analysis.status === 'pending' && 'Wartend'}
-                      {analysis.status === 'processing' && 'Verarbeitung'}
-                      {analysis.status === 'failed' && 'Fehlgeschlagen'}
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 mt-1">
-                    {analysis.projects && (
-                      <span className="text-xs text-muted-foreground">
-                        {analysis.projects.name}
+                    </span>
+                    
+                    {/* Meta Info */}
+                    <div className="flex items-center gap-2">
+                      {/* Status Badge */}
+                      <span 
+                        className="px-2 py-0.5 rounded-md text-xs"
+                        style={{
+                          backgroundColor: analysis.status === 'completed' 
+                            ? 'rgba(52,167,173,0.15)' 
+                            : analysis.status === 'failed'
+                            ? 'rgba(239,68,68,0.15)'
+                            : 'rgba(107,114,128,0.15)',
+                          color: analysis.status === 'completed' 
+                            ? '#34A7AD' 
+                            : analysis.status === 'failed'
+                            ? '#EF4444'
+                            : '#6B7280'
+                        }}
+                      >
+                        {analysis.status === 'completed' && 'Abgeschlossen'}
+                        {analysis.status === 'pending' && 'Wartend'}
+                        {analysis.status === 'processing' && 'Verarbeitung'}
+                        {analysis.status === 'failed' && 'Fehlgeschlagen'}
                       </span>
-                    )}
-                    <span className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(analysis.created_at), {
-                        addSuffix: true,
-                        locale: de
-                      })}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {analysis.credits_used} Credits
-                    </span>
+                      
+                      {/* Time & Credits */}
+                      <span className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(analysis.created_at), {
+                          addSuffix: true,
+                          locale: de
+                        })} · {analysis.credits_used} Credits
+                      </span>
+                    </div>
                   </div>
                 </div>
                 
+                {/* Right Section - Action Buttons */}
                 <div className="flex items-center gap-2">
                   {analysis.status === 'completed' && (
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href={`${moduleConfig?.basePath}/${toolId}`}>
-                        <Eye className="h-4 w-4" />
-                      </Link>
-                    </Button>
+                    <Link 
+                      href={`${moduleConfig?.basePath}/${toolId}`}
+                      className="w-9 h-9 rounded-lg flex items-center justify-center transition-all hover:bg-white/20 dark:hover:bg-white/10"
+                    >
+                      <Eye className="w-4 h-4 text-muted-foreground" />
+                    </Link>
                   )}
                   {analysis.projects && (
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/dashboard/projects/${analysis.projects.id}`}>
-                        <ExternalLink className="h-4 w-4" />
-                      </Link>
-                    </Button>
+                    <Link 
+                      href={`/dashboard/projects/${analysis.projects.id}`}
+                      className="w-9 h-9 rounded-lg flex items-center justify-center transition-all hover:bg-white/20 dark:hover:bg-white/10"
+                    >
+                      <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                    </Link>
                   )}
                 </div>
               </div>

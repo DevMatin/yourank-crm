@@ -3,7 +3,14 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { dataForSeoClient } from '@/lib/dataforseo/client';
 import { checkUserCredits, deductCredits, saveAnalysis, updateAnalysis } from '@/lib/utils/analysis';
 import { logger } from '@/lib/logger';
-import { DataforseoLabsGoogleKeywordOverviewLiveRequestInfo } from 'dataforseo-client';
+import { 
+  DataforseoLabsGoogleRelatedKeywordsLiveRequestInfo,
+  KeywordsDataGoogleAdsSearchVolumeLiveRequestInfo,
+  DataforseoLabsGoogleBulkKeywordDifficultyLiveRequestInfo,
+  KeywordsDataGoogleTrendsExploreLiveRequestInfo,
+  KeywordsDataDataforseoTrendsDemographyLiveRequestInfo
+} from 'dataforseo-client';
+import { CombinedKeywordOverview, CreditBreakdown } from '@/types/analysis';
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,9 +37,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check credits
-    const requiredCredits = 2;
-    await checkUserCredits(user.id, requiredCredits);
+    // Check credits (Bundle-Preis: 3 Credits statt 5)
+    const bundleCredits = 3;
+    await checkUserCredits(user.id, bundleCredits);
 
     // Save analysis record
     const analysisRecord = await saveAnalysis(
@@ -40,161 +47,210 @@ export async function POST(request: NextRequest) {
       'keywords_overview',
       user.id,
       undefined,
-      requiredCredits
+      bundleCredits,
+      'overview' // Neue Kategorie
     );
 
     try {
-      // Create DataForSEO request
-      const request = new DataforseoLabsGoogleKeywordOverviewLiveRequestInfo();
-      request.keywords = [keyword.trim()]; // Use keywords array, not keyword
-      request.location_name = location;
-      request.language_name = language;
-
-      logger.info('Sending request to DataForSEO:', {
+      logger.info('🚀 Starting Overview Analysis:', {
         keyword: keyword.trim(),
         location,
-        language
+        language,
+        userId: user.id,
+        timestamp: new Date().toISOString()
       });
 
-      // Call DataForSEO API with retry logic
-      let result;
-      let retryCount = 0;
-      const maxRetries = 3;
-      
-      while (retryCount < maxRetries) {
-        try {
-          result = await dataForSeoClient.labs.googleKeywordOverviewLive([request]);
-          break; // Success, exit retry loop
-        } catch (retryError) {
-          retryCount++;
-          logger.warn(`DataForSEO API attempt ${retryCount} failed:`, retryError);
-          if (retryCount >= maxRetries) {
-            throw retryError; // Re-throw the last error
-          }
-          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+      // Sequentielles Laden mit Promise.allSettled für bessere Performance
+      const results = await Promise.allSettled([
+        // 1. Related Keywords
+        (async () => {
+          logger.info('🔗 Starting Related Keywords API call');
+          const relatedRequest = new DataforseoLabsGoogleRelatedKeywordsLiveRequestInfo();
+          relatedRequest.keyword = keyword.trim();
+          relatedRequest.location_name = location;
+          relatedRequest.language_name = language;
+          relatedRequest.limit = 10;
+          relatedRequest.depth = 1;
+          relatedRequest.include_seed_keyword = false;
+          
+          const result = await dataForSeoClient.labs.googleRelatedKeywordsLive([relatedRequest]);
+          logger.info('✅ Related Keywords API completed successfully');
+          return result;
+        })(),
+        
+        // 2. Search Volume
+        (async () => {
+          logger.info('📊 Starting Search Volume API call');
+          const volumeRequest = new KeywordsDataGoogleAdsSearchVolumeLiveRequestInfo();
+          volumeRequest.keywords = [keyword.trim()];
+          volumeRequest.location_name = location;
+          volumeRequest.language_name = language;
+          
+          const result = await dataForSeoClient.keywords.googleAdsSearchVolumeLive([volumeRequest]);
+          logger.info('✅ Search Volume API completed successfully');
+          return result;
+        })(),
+        
+        // 3. Keyword Difficulty
+        (async () => {
+          logger.info('🎯 Starting Keyword Difficulty API call');
+          const difficultyRequest = new DataforseoLabsGoogleBulkKeywordDifficultyLiveRequestInfo();
+          difficultyRequest.keywords = [keyword.trim()];
+          difficultyRequest.location_name = location;
+          difficultyRequest.language_name = language;
+          
+          const result = await dataForSeoClient.labs.googleBulkKeywordDifficultyLive([difficultyRequest]);
+          logger.info('✅ Keyword Difficulty API completed successfully');
+          return result;
+        })(),
+        
+        // 4. Google Trends (optional)
+        (async () => {
+          logger.info('📈 Starting Google Trends API call');
+          const trendsRequest = new KeywordsDataGoogleTrendsExploreLiveRequestInfo();
+          trendsRequest.keywords = [keyword.trim()];
+          trendsRequest.location_name = location;
+          trendsRequest.language_name = language;
+          trendsRequest.date_from = '2023-01-01';
+          trendsRequest.date_to = new Date().toISOString().split('T')[0];
+          
+          const result = await dataForSeoClient.keywords.googleTrendsExploreLive([trendsRequest]);
+          logger.info('✅ Google Trends API completed successfully');
+          return result;
+        })(),
+        
+        // 5. Demographics (optional)
+        (async () => {
+          logger.info('👥 Starting Demographics API call');
+          const demographicsRequest = new KeywordsDataDataforseoTrendsDemographyLiveRequestInfo();
+          demographicsRequest.keywords = [keyword.trim()];
+          demographicsRequest.location_name = location;
+          demographicsRequest.language_name = language;
+          
+          const result = await dataForSeoClient.keywords.dataforseoTrendsDemographyLive([demographicsRequest]);
+          logger.info('✅ Demographics API completed successfully');
+          return result;
+        })()
+      ]);
+
+      // Debug: Log individual API results
+      logger.info('📋 Individual API Results:');
+      results.forEach((result, index) => {
+        const apiNames = ['Related Keywords', 'Search Volume', 'Keyword Difficulty', 'Google Trends', 'Demographics'];
+        if (result.status === 'fulfilled') {
+          logger.info(`  ✅ ${apiNames[index]}: SUCCESS`);
+        } else {
+          logger.error(`  ❌ ${apiNames[index]}: FAILED - ${result.reason}`);
         }
-      }
-
-      logger.info('DataForSEO API Response:', JSON.stringify(result, null, 2));
-
-      // Check if we have valid results
-      if (!result?.tasks?.[0]?.result?.[0]?.items || result.tasks[0].result[0].items.length === 0) {
-        logger.info('No keyword overview data found in DataForSEO response');
-        await updateAnalysis(analysisRecord.id, {
-          status: 'completed',
-          result: []
-        });
-        
-        return NextResponse.json({
-          success: true,
-          data: [],
-          analysisId: analysisRecord.id,
-          creditsUsed: 0,
-          message: 'No keyword overview data found for this term',
-          source: 'DataForSEO API'
-        });
-      }
-      
-      // Verify DataForSEO data structure
-      const taskResult = result.tasks[0].result[0];
-      if (!taskResult || !taskResult.items || taskResult.items.length === 0) {
-        throw new Error('Invalid DataForSEO data structure - no items found');
-      }
-      const firstItem = taskResult.items[0];
-      if (!firstItem.keyword_info) {
-        throw new Error('Invalid DataForSEO data structure - missing keyword_info');
-      }
-      
-      logger.info('✅ DataForSEO data verified - contains valid keyword_info structure');
-
-      // Process results
-      const processedResults = result.tasks[0].result[0].items.map((item: any) => {
-        logger.info('Processing item:', JSON.stringify(item, null, 2));
-        
-        return {
-          keyword: item.keyword || 'Unknown',
-          search_volume: item.keyword_info?.search_volume || 0,
-          competition: item.keyword_info?.competition_level === 'HIGH' ? 0.8 :
-                      item.keyword_info?.competition_level === 'MEDIUM' ? 0.5 : 0.2,
-          cpc: item.keyword_info?.cpc || 0,
-          trend: item.keyword_info?.search_volume_trend?.yearly || 0,
-          keyword_info: {
-            se_type: item.keyword_info?.se_type || 'google',
-            last_updated_time: item.keyword_info?.last_updated_time || new Date().toISOString(),
-            competition_level: item.keyword_info?.competition_level || 'LOW',
-            cpc: item.keyword_info?.cpc || 0,
-            search_volume: item.keyword_info?.search_volume || 0,
-            monthly_searches: item.keyword_info?.monthly_searches || [],
-            keyword_properties: {
-              se_type: item.keyword_info?.se_type || 'google',
-              core_keyword: item.keyword_properties?.core_keyword || keyword,
-              synonym_keywords: item.keyword_properties?.synonym_keywords || [],
-              related_keywords: item.keyword_properties?.related_keywords || [],
-              ngram_keywords: item.keyword_properties?.ngram_keywords || []
-            }
-          }
-        };
       });
 
-      // Debug logging
-      logger.info('Processed Results:', JSON.stringify(processedResults, null, 2));
-      logger.info('Results count:', processedResults.length);
+      // Error-Handling pro Sektion
+      const overview: CombinedKeywordOverview = {
+        keyword: keyword.trim(),
+        related: results[0].status === 'fulfilled' ? results[0].value : null,
+        searchVolume: results[1].status === 'fulfilled' ? results[1].value : null,
+        difficulty: results[2].status === 'fulfilled' ? results[2].value : null,
+        trends: results[3].status === 'fulfilled' ? results[3].value : null,
+        demographics: results[4].status === 'fulfilled' ? results[4].value : null
+      };
+
+      // Credit-Breakdown für Transparenz
+      const creditBreakdown: CreditBreakdown = {
+        related: 1,
+        volume: 1,
+        difficulty: 1,
+        trends: 1,
+        demographics: 1,
+        bundle_discount: -3,
+        total: bundleCredits
+      };
+
+      // Logging für Debugging
+      logger.info('Overview API Results:', {
+        keyword: overview.keyword,
+        relatedSuccess: results[0].status === 'fulfilled',
+        volumeSuccess: results[1].status === 'fulfilled',
+        difficultySuccess: results[2].status === 'fulfilled',
+        trendsSuccess: results[3].status === 'fulfilled',
+        demographicsSuccess: results[4].status === 'fulfilled',
+        totalResults: Object.values(overview).filter(v => v !== null).length
+      });
+      
+      // Debug: Log actual data structure
+      logger.info('Trends Data Structure:', JSON.stringify(overview.trends, null, 2));
+      logger.info('Demographics Data Structure:', JSON.stringify(overview.demographics, null, 2));
 
       // Update analysis with results
       await updateAnalysis(analysisRecord.id, {
         status: 'completed',
-        result: processedResults
+        result: {
+          overview,
+          creditBreakdown,
+          timestamp: new Date().toISOString(),
+          source: 'DataForSEO API (Combined)'
+        }
       });
 
       // Deduct credits
-      await deductCredits(user.id, requiredCredits);
+      await deductCredits(user.id, bundleCredits);
 
-      return NextResponse.json({
+      const response = {
         success: true,
-        data: processedResults,
+        data: overview,
         analysisId: analysisRecord.id,
-        creditsUsed: requiredCredits,
-        source: 'DataForSEO API',
-        apiEndpoint: 'googleKeywordOverviewLive',
+        creditsUsed: bundleCredits,
+        creditBreakdown,
+        source: 'DataForSEO API (Combined Overview)',
         timestamp: new Date().toISOString(),
-        dataForSeoTaskId: result.tasks[0].id
+        partialResults: {
+          related: results[0].status === 'fulfilled',
+          volume: results[1].status === 'fulfilled',
+          difficulty: results[2].status === 'fulfilled',
+          trends: results[3].status === 'fulfilled',
+          demographics: results[4].status === 'fulfilled'
+        }
+      };
+
+      logger.info('🎉 Overview Analysis Completed:', {
+        keyword: overview.keyword,
+        successCount: Object.values(response.partialResults).filter(Boolean).length,
+        totalApis: 5,
+        creditsUsed: bundleCredits,
+        analysisId: analysisRecord.id
       });
 
+      return NextResponse.json(response);
+
     } catch (apiError) {
-      logger.error('DataForSEO API Error:', apiError);
+      logger.error('Overview API Error:', apiError);
       
       // Update analysis with error
       await updateAnalysis(analysisRecord.id, {
         status: 'failed',
-        result: { error: 'API call failed' }
+        result: { error: 'API call failed', details: apiError instanceof Error ? apiError.message : 'Unknown error' }
       });
 
-      // Enhanced error handling
-      let errorMessage = 'Fehler beim Abrufen der Keyword-Übersicht. Bitte versuche es erneut.';
-      
-      if (apiError instanceof Error) {
-        if (apiError.message.includes('ECONNRESET') || 
-            apiError.message.includes('aborted') || 
-            apiError.message.includes('network')) {
-          errorMessage = 'Verbindungsfehler zur DataForSEO API. Bitte versuche es in ein paar Sekunden erneut.';
-        } else if (apiError.message.includes('Invalid DataForSEO data structure')) {
-          errorMessage = 'Ungültige Datenstruktur von DataForSEO. Bitte kontaktiere den Support.';
-        } else {
-          errorMessage = `API-Fehler: ${apiError.message}`;
-        }
-      }
+      // Check if it's a connection error
+      const isConnectionError = apiError instanceof Error && 
+        (apiError.message.includes('ECONNRESET') || 
+         apiError.message.includes('aborted') ||
+         apiError.message.includes('network'));
 
       return NextResponse.json(
         { 
-          error: errorMessage,
-          success: false 
+          error: isConnectionError 
+            ? 'Verbindungsfehler zur DataForSEO API. Bitte versuche es erneut.'
+            : 'Failed to fetch overview data. Please try again.',
+          success: false,
+          details: apiError instanceof Error ? apiError.message : 'Unknown error',
+          isConnectionError
         },
         { status: 500 }
       );
     }
 
   } catch (error) {
-    logger.error('Keyword Overview API Error:', error);
+    logger.error('Overview API Error:', error);
     
     if (error instanceof Error && error.message.includes('Insufficient credits')) {
       return NextResponse.json(

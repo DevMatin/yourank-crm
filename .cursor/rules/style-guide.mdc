@@ -1,0 +1,14 @@
+---
+alwaysApply: true
+---
+
+// Beim Erstellen neuer Seiten oder beim Anpassen bestehender Seiten ist der offizielle Styleguide unter @YouRank-Cursor-AI-Guide.md zwingend zu beachten. 
+// Dazu zählen insbesondere: 
+// - Nutzung von GlassCard für Card-Container
+// - Konsistente Verwendung der Farbvariablen (`text-foreground`, `text-muted-foreground`, CSS-Variables, keine Hardcodierung für responsive Farben)
+// - Teal-Akzent ausschließlich mit `style={{ color: '#34A7AD' }}`
+// - Button- und Card-Radien strikt nach Vorgabe (`rounded-xl` für Buttons/Inputs, `rounded-3xl` für Cards)
+// - Spacing und Gap-Größen laut Spacing-Richtlinie (`p-4`, `p-6`, usw., `gap-4`, `gap-6` usw.)
+// - Hover States immer mit `dark:`-Variante
+// - Imports und Komponenten-Struktur gemäß den Beispielen des Guides
+// Siehe für Details und Beispiele den vollständigen Guide @YouRank-Cursor-AI-Guide.md!

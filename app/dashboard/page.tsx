@@ -217,26 +217,65 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="space-y-6">
+        {/* Stat Cards Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-card p-6 rounded-lg border animate-pulse">
-              <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-              <div className="h-8 bg-muted rounded w-1/2"></div>
+            <div 
+              key={i} 
+              className="p-6 rounded-3xl border animate-pulse"
+              style={{
+                background: 'var(--glass-card-bg)',
+                borderColor: 'var(--glass-card-border)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)'
+              }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="h-4 bg-white/20 dark:bg-white/10 rounded w-3/4"></div>
+                <div className="w-10 h-10 bg-white/20 dark:bg-white/10 rounded-xl"></div>
+              </div>
+              <div className="h-8 bg-white/20 dark:bg-white/10 rounded w-1/2 mb-2"></div>
+              <div className="h-3 bg-white/20 dark:bg-white/10 rounded w-2/3"></div>
             </div>
           ))}
         </div>
+        
+        {/* Main Content Skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-card p-6 rounded-lg border animate-pulse">
-            <div className="h-6 bg-muted rounded w-1/3 mb-4"></div>
+          {/* Recent Analysis Skeleton */}
+          <div 
+            className="p-6 rounded-3xl border animate-pulse"
+            style={{
+              background: 'var(--glass-card-bg)',
+              borderColor: 'var(--glass-card-border)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)'
+            }}
+          >
+            <div className="h-6 bg-white/20 dark:bg-white/10 rounded w-1/3 mb-6"></div>
             <div className="space-y-3">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-16 bg-muted rounded"></div>
+                <div 
+                  key={i} 
+                  className="h-16 bg-white/20 dark:bg-white/10 rounded-xl"
+                  style={{ borderColor: 'var(--border)' }}
+                ></div>
               ))}
             </div>
           </div>
-          <div className="bg-card p-6 rounded-lg border animate-pulse">
-            <div className="h-6 bg-muted rounded w-1/3 mb-4"></div>
-            <div className="h-48 bg-muted rounded"></div>
+          
+          {/* Activity Chart Skeleton */}
+          <div 
+            className="p-6 rounded-3xl border animate-pulse"
+            style={{
+              background: 'var(--glass-card-bg)',
+              borderColor: 'var(--glass-card-border)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)'
+            }}
+          >
+            <div className="h-6 bg-white/20 dark:bg-white/10 rounded w-1/3 mb-6"></div>
+            <div className="h-64 bg-white/20 dark:bg-white/10 rounded-xl"></div>
           </div>
         </div>
       </div>

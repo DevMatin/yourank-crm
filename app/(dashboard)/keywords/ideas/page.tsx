@@ -1,12 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { GlassCard } from '@/components/ui/glass-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { 
   Brain, 
   TrendingUp, 
@@ -197,104 +196,117 @@ export default function KeywordIdeasPage() {
       </div>
 
       {/* Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Lightbulb className="h-5 w-5" />
-            Keyword-Ideen Generator
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="keyword">Keyword *</Label>
-                <Input
-                  id="keyword"
-                  type="text"
-                  placeholder="z.B. seo tools"
-                  value={keyword}
-                  onChange={(e) => setKeyword(e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="location">Standort</Label>
-                <select
-                  id="location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="Germany">Deutschland</option>
-                  <option value="United States">USA</option>
-                  <option value="United Kingdom">Großbritannien</option>
-                  <option value="France">Frankreich</option>
-                  <option value="Spain">Spanien</option>
-                  <option value="Italy">Italien</option>
-                </select>
-              </div>
+      <GlassCard className="p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <div 
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(145deg, rgba(52,167,173,0.15), rgba(94,210,217,0.1))',
+              boxShadow: '0 4px 12px rgba(52,167,173,0.15)'
+            }}
+          >
+            <Lightbulb className="h-5 w-5" style={{ color: '#34A7AD' }} />
+          </div>
+          <h3 className="text-foreground">Keyword-Ideen Generator</h3>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="keyword" className="text-foreground">Keyword *</Label>
+              <Input
+                id="keyword"
+                type="text"
+                placeholder="z.B. seo tools"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                required
+              />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="language">Sprache</Label>
-                <select
-                  id="language"
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="German">Deutsch</option>
-                  <option value="English">Englisch</option>
-                  <option value="French">Französisch</option>
-                  <option value="Spanish">Spanisch</option>
-                  <option value="Italian">Italienisch</option>
-                </select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="limit">Anzahl Ideen</Label>
-                <Input
-                  id="limit"
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={limit}
-                  onChange={(e) => setLimit(parseInt(e.target.value) || 10)}
-                />
-              </div>
-            </div>
-            
-            <div className="flex gap-3">
-              <Button 
-                type="submit" 
-                disabled={loading || !keyword.trim()}
-                className="flex-1"
+            <div className="space-y-2">
+              <Label htmlFor="location" className="text-foreground">Standort</Label>
+              <select
+                id="location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="flex h-10 w-full rounded-xl border px-3 py-2 text-sm transition-all duration-300 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderColor: 'var(--glass-card-border)'
+                }}
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Generiere Ideen...
-                  </>
-                ) : (
-                  <>
-                    <Brain className="h-4 w-4 mr-2" />
-                    Ideen generieren
-                  </>
-                )}
-              </Button>
+                <option value="Germany">Deutschland</option>
+                <option value="United States">USA</option>
+                <option value="United Kingdom">Großbritannien</option>
+                <option value="France">Frankreich</option>
+                <option value="Spain">Spanien</option>
+                <option value="Italy">Italien</option>
+              </select>
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="language" className="text-foreground">Sprache</Label>
+              <select
+                id="language"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="flex h-10 w-full rounded-xl border px-3 py-2 text-sm transition-all duration-300 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderColor: 'var(--glass-card-border)'
+                }}
+              >
+                <option value="German">Deutsch</option>
+                <option value="English">Englisch</option>
+                <option value="French">Französisch</option>
+                <option value="Spanish">Spanisch</option>
+                <option value="Italian">Italienisch</option>
+              </select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="limit" className="text-foreground">Anzahl Ideen</Label>
+              <Input
+                id="limit"
+                type="number"
+                min="1"
+                max="100"
+                value={limit}
+                onChange={(e) => setLimit(parseInt(e.target.value) || 10)}
+              />
+            </div>
+          </div>
+          
+          <div className="flex gap-3">
+            <Button 
+              type="submit" 
+              disabled={loading || !keyword.trim()}
+              className="flex-1 hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-300"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Generiere Ideen...
+                </>
+              ) : (
+                <>
+                  <Brain className="h-4 w-4 mr-2" />
+                  Ideen generieren
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
+      </GlassCard>
 
       {/* Results */}
       {results.length > 0 && (
@@ -306,12 +318,12 @@ export default function KeywordIdeasPage() {
                 {results.length} kreative Ideen für "{keyword}" gefunden
               </p>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="outline" className="text-xs">
+                <span className="px-2 py-0.5 rounded-md text-xs border" style={{ backgroundColor: 'rgba(52,167,173,0.1)', borderColor: 'rgba(52,167,173,0.2)', color: '#34A7AD' }}>
                   📊 DataForSEO API
-                </Badge>
-                <Badge variant="outline" className="text-xs">
+                </span>
+                <span className="px-2 py-0.5 rounded-md text-xs border" style={{ backgroundColor: 'rgba(52,167,173,0.1)', borderColor: 'rgba(52,167,173,0.2)', color: '#34A7AD' }}>
                   💡 googleKeywordIdeasLive
-                </Badge>
+                </span>
               </div>
             </div>
             
@@ -354,36 +366,35 @@ export default function KeywordIdeasPage() {
           {/* Results Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {results.map((item, index) => (
-              <Card key={index} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <Hash className="h-4 w-4 text-primary" />
-                      <CardTitle className="text-base">{item.keyword}</CardTitle>
-                    </div>
-                    <Badge 
-                      variant="secondary" 
-                      className={
-                        item.competition < 0.3 
-                          ? 'bg-green-100 text-green-800' 
-                          : item.competition < 0.7 
-                          ? 'bg-yellow-100 text-yellow-800' 
-                          : 'bg-red-100 text-red-800'
-                      }
-                    >
-                      {item.competition < 0.3 ? 'Niedrig' : item.competition < 0.7 ? 'Mittel' : 'Hoch'}
-                    </Badge>
+              <GlassCard key={index} className="p-4 hover:shadow-lg transition-all duration-300">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Hash className="h-4 w-4" style={{ color: '#34A7AD' }} />
+                    <h4 className="text-base font-medium text-foreground">{item.keyword}</h4>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
+                  <span 
+                    className="px-2 py-0.5 rounded-md text-xs font-medium"
+                    style={
+                      item.competition < 0.3 
+                        ? { backgroundColor: 'rgba(16,185,129,0.15)', color: '#10B981' }
+                        : item.competition < 0.7 
+                        ? { backgroundColor: 'rgba(245,158,11,0.15)', color: '#F59E0B' }
+                        : { backgroundColor: 'rgba(239,68,68,0.15)', color: '#EF4444' }
+                    }
+                  >
+                    {item.competition < 0.3 ? 'Niedrig' : item.competition < 0.7 ? 'Mittel' : 'Hoch'}
+                  </span>
+                </div>
+                
+                <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
                       <span className="text-muted-foreground">Suchvolumen:</span>
-                      <div className="font-medium">{item.search_volume.toLocaleString()}</div>
+                      <div className="font-medium text-foreground">{item.search_volume.toLocaleString()}</div>
                     </div>
                     <div>
                       <span className="text-muted-foreground">CPC:</span>
-                      <div className="font-medium">${item.cpc.toFixed(2)}</div>
+                      <div className="font-medium text-foreground">${item.cpc.toFixed(2)}</div>
                     </div>
                   </div>
                   
@@ -391,13 +402,16 @@ export default function KeywordIdeasPage() {
                     <span className="text-sm text-muted-foreground">Trend:</span>
                     <div className="flex items-center gap-1">
                       {item.trend > 0 ? (
-                        <TrendingUp className="h-3 w-3 text-green-600" />
+                        <TrendingUp className="h-3 w-3 text-green-500 dark:text-green-400" />
                       ) : item.trend < 0 ? (
-                        <TrendingUp className="h-3 w-3 text-red-600 rotate-180" />
+                        <TrendingUp className="h-3 w-3 text-red-500 dark:text-red-400 rotate-180" />
                       ) : (
-                        <div className="h-3 w-3 bg-gray-400 rounded-full" />
+                        <div className="h-3 w-3 bg-muted rounded-full" />
                       )}
-                      <span className="text-sm font-medium">
+                      <span className={`text-sm font-medium ${
+                        item.trend > 0 ? 'text-green-600 dark:text-green-400' :
+                        item.trend < 0 ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'
+                      }`}>
                         {item.trend > 0 ? '+' : ''}{item.trend.toFixed(1)}%
                       </span>
                     </div>
@@ -408,20 +422,35 @@ export default function KeywordIdeasPage() {
                       <span className="text-sm text-muted-foreground">Kategorien:</span>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {item.keyword_info.categories.slice(0, 3).map((category, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs">
+                          <span 
+                            key={idx} 
+                            className="px-2 py-0.5 rounded-md text-xs border"
+                            style={{
+                              backgroundColor: 'rgba(52,167,173,0.1)',
+                              borderColor: 'rgba(52,167,173,0.2)',
+                              color: '#34A7AD'
+                            }}
+                          >
                             {category}
-                          </Badge>
+                          </span>
                         ))}
                         {item.keyword_info.categories.length > 3 && (
-                          <Badge variant="outline" className="text-xs">
+                          <span 
+                            className="px-2 py-0.5 rounded-md text-xs border"
+                            style={{
+                              backgroundColor: 'rgba(52,167,173,0.1)',
+                              borderColor: 'rgba(52,167,173,0.2)',
+                              color: '#34A7AD'
+                            }}
+                          >
                             +{item.keyword_info.categories.length - 3} mehr
-                          </Badge>
+                          </span>
                         )}
                       </div>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </GlassCard>
             ))}
           </div>
         </div>
@@ -429,42 +458,67 @@ export default function KeywordIdeasPage() {
 
       {/* Search History */}
       {loadingHistory ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <History className="h-5 w-5" />
-              Vorherige Suchen
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin mr-2" />
-              <span className="text-muted-foreground">Lade Suchhistorie...</span>
+        <GlassCard className="p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <div 
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(145deg, rgba(52,167,173,0.15), rgba(94,210,217,0.1))',
+                boxShadow: '0 4px 12px rgba(52,167,173,0.15)'
+              }}
+            >
+              <History className="h-5 w-5" style={{ color: '#34A7AD' }} />
             </div>
-          </CardContent>
-        </Card>
+            <h3 className="text-foreground">Vorherige Suchen</h3>
+          </div>
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin mr-2" />
+            <span className="text-muted-foreground">Lade Suchhistorie...</span>
+          </div>
+        </GlassCard>
       ) : searchHistory.length > 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <History className="h-5 w-5" />
-              Vorherige Suchen
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <GlassCard className="p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <div 
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(145deg, rgba(52,167,173,0.15), rgba(94,210,217,0.1))',
+                boxShadow: '0 4px 12px rgba(52,167,173,0.15)'
+              }}
+            >
+              <History className="h-5 w-5" style={{ color: '#34A7AD' }} />
+            </div>
+            <h3 className="text-foreground">Vorherige Suchen</h3>
+          </div>
+          
+          <div className="space-y-4">
             {searchHistory.map((item, index) => (
-              <div key={item.analysisId} className="border rounded-lg p-4">
+              <div key={item.analysisId} className="border rounded-xl p-4" style={{ borderColor: 'var(--border)' }}>
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <Hash className="h-4 w-4 text-primary" />
-                      <span className="font-medium">{item.keyword}</span>
-                      <Badge variant="outline" className="text-xs">
+                      <Hash className="h-4 w-4" style={{ color: '#34A7AD' }} />
+                      <span className="font-medium text-foreground">{item.keyword}</span>
+                      <span 
+                        className="px-2 py-0.5 rounded-md text-xs border"
+                        style={{
+                          backgroundColor: 'rgba(52,167,173,0.1)',
+                          borderColor: 'rgba(52,167,173,0.2)',
+                          color: '#34A7AD'
+                        }}
+                      >
                         {item.location}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
+                      </span>
+                      <span 
+                        className="px-2 py-0.5 rounded-md text-xs border"
+                        style={{
+                          backgroundColor: 'rgba(52,167,173,0.1)',
+                          borderColor: 'rgba(52,167,173,0.2)',
+                          color: '#34A7AD'
+                        }}
+                      >
                         {item.language}
-                      </Badge>
+                      </span>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
@@ -482,6 +536,7 @@ export default function KeywordIdeasPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => loadHistoryResults(item)}
+                      className="hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-300"
                     >
                       <Eye className="h-4 w-4 mr-1" />
                       Anzeigen
@@ -490,6 +545,7 @@ export default function KeywordIdeasPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setExpandedHistory(expandedHistory === index ? null : index)}
+                      className="hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-300"
                     >
                       {expandedHistory === index ? (
                         <ChevronUp className="h-4 w-4" />
@@ -501,7 +557,7 @@ export default function KeywordIdeasPage() {
                 </div>
                 
                 {expandedHistory === index && (
-                  <div className="mt-4 pt-4 border-t">
+                  <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                       <KeywordMetricsCard
                         title="Durchschnittliches Suchvolumen"
@@ -527,36 +583,35 @@ export default function KeywordIdeasPage() {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {item.results.slice(0, 6).map((result, idx) => (
-                        <Card key={idx} className="hover:shadow-md transition-shadow">
-                          <CardHeader className="pb-3">
-                            <div className="flex items-start justify-between">
-                              <div className="flex items-center gap-2">
-                                <Hash className="h-4 w-4 text-primary" />
-                                <CardTitle className="text-base">{result.keyword}</CardTitle>
-                              </div>
-                              <Badge 
-                                variant="secondary" 
-                                className={
-                                  result.competition < 0.3 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : result.competition < 0.7 
-                                    ? 'bg-yellow-100 text-yellow-800' 
-                                    : 'bg-red-100 text-red-800'
-                                }
-                              >
-                                {result.competition < 0.3 ? 'Niedrig' : result.competition < 0.7 ? 'Mittel' : 'Hoch'}
-                              </Badge>
+                        <GlassCard key={idx} className="p-4 hover:shadow-lg transition-all duration-300">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <Hash className="h-4 w-4" style={{ color: '#34A7AD' }} />
+                              <h4 className="text-base font-medium text-foreground">{result.keyword}</h4>
                             </div>
-                          </CardHeader>
-                          <CardContent className="space-y-3">
+                            <span 
+                              className="px-2 py-0.5 rounded-md text-xs font-medium"
+                              style={
+                                result.competition < 0.3 
+                                  ? { backgroundColor: 'rgba(16,185,129,0.15)', color: '#10B981' }
+                                  : result.competition < 0.7 
+                                  ? { backgroundColor: 'rgba(245,158,11,0.15)', color: '#F59E0B' }
+                                  : { backgroundColor: 'rgba(239,68,68,0.15)', color: '#EF4444' }
+                              }
+                            >
+                              {result.competition < 0.3 ? 'Niedrig' : result.competition < 0.7 ? 'Mittel' : 'Hoch'}
+                            </span>
+                          </div>
+                          
+                          <div className="space-y-3">
                             <div className="grid grid-cols-2 gap-2 text-sm">
                               <div>
                                 <span className="text-muted-foreground">Suchvolumen:</span>
-                                <div className="font-medium">{result.search_volume.toLocaleString()}</div>
+                                <div className="font-medium text-foreground">{result.search_volume.toLocaleString()}</div>
                               </div>
                               <div>
                                 <span className="text-muted-foreground">CPC:</span>
-                                <div className="font-medium">${result.cpc.toFixed(2)}</div>
+                                <div className="font-medium text-foreground">${result.cpc.toFixed(2)}</div>
                               </div>
                             </div>
                             
@@ -564,47 +619,55 @@ export default function KeywordIdeasPage() {
                               <span className="text-sm text-muted-foreground">Trend:</span>
                               <div className="flex items-center gap-1">
                                 {result.trend > 0 ? (
-                                  <TrendingUp className="h-3 w-3 text-green-600" />
+                                  <TrendingUp className="h-3 w-3 text-green-500 dark:text-green-400" />
                                 ) : result.trend < 0 ? (
-                                  <TrendingUp className="h-3 w-3 text-red-600 rotate-180" />
+                                  <TrendingUp className="h-3 w-3 text-red-500 dark:text-red-400 rotate-180" />
                                 ) : (
-                                  <div className="h-3 w-3 bg-gray-400 rounded-full" />
+                                  <div className="h-3 w-3 bg-muted rounded-full" />
                                 )}
-                                <span className="text-sm font-medium">
+                                <span className={`text-sm font-medium ${
+                                  result.trend > 0 ? 'text-green-600 dark:text-green-400' :
+                                  result.trend < 0 ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'
+                                }`}>
                                   {result.trend > 0 ? '+' : ''}{result.trend.toFixed(1)}%
                                 </span>
                               </div>
                             </div>
-                          </CardContent>
-                        </Card>
+                          </div>
+                        </GlassCard>
                       ))}
                     </div>
                   </div>
                 )}
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </GlassCard>
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <History className="h-5 w-5" />
-              Vorherige Suchen
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">
-              <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">
-                Noch keine vorherigen Suchen vorhanden.
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Führe deine erste Keyword-Ideen-Suche durch, um hier Ergebnisse zu sehen.
-              </p>
+        <GlassCard className="p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <div 
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(145deg, rgba(52,167,173,0.15), rgba(94,210,217,0.1))',
+                boxShadow: '0 4px 12px rgba(52,167,173,0.15)'
+              }}
+            >
+              <History className="h-5 w-5" style={{ color: '#34A7AD' }} />
             </div>
-          </CardContent>
-        </Card>
+            <h3 className="text-foreground">Vorherige Suchen</h3>
+          </div>
+          
+          <div className="text-center py-8">
+            <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">
+              Noch keine vorherigen Suchen vorhanden.
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Führe deine erste Keyword-Ideen-Suche durch, um hier Ergebnisse zu sehen.
+            </p>
+          </div>
+        </GlassCard>
       )}
     </div>
   );

@@ -1,5 +1,5 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { AnalysisInput, AnalysisType } from '@/types/analysis';
+import { AnalysisInput, AnalysisType, AnalysisCategory } from '@/types/analysis';
 import { logger } from '@/lib/logger';
 
 export async function saveAnalysis(
@@ -7,7 +7,8 @@ export async function saveAnalysis(
   type: AnalysisType,
   userId: string,
   projectId?: string,
-  creditsUsed: number = 1
+  creditsUsed: number = 1,
+  category?: AnalysisCategory
 ) {
   const supabase = await createServerSupabaseClient();
   
@@ -32,6 +33,7 @@ export async function saveAnalysis(
         input: input as any,
         status: 'pending' as const,
         credits_used: creditsUsed,
+        category: category || 'legacy',
       })
       .select()
       .single();

@@ -6,48 +6,80 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
+    /* Apple Sonoma Light Mode Colors */
+    --background: #F5F6F8;
+    --foreground: #1B1D1F;
+    --card: #FFFFFF;
+    --card-foreground: #1B1D1F;
+    --popover: 255 255 255 / 0.95;
+    --popover-foreground: #1B1D1F;
+    --primary: #34A7AD;
+    --primary-light: #5ED2D9;
+    --primary-dark: #26797E;
+    --primary-foreground: #FFFFFF;
     --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
+    --secondary-foreground: #1B1D1F;
     --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
+    --muted-foreground: #6B6E71;
+    --accent: #34A7AD;
+    --accent-foreground: #1B1D1F;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    --destructive-foreground: #FFFFFF;
+    --border: rgba(255, 255, 255, 0.2);
+    --input: rgba(255, 255, 255, 0.3);
+    --ring: #34A7AD;
+    --radius: 1.5rem; /* 24px */
+
+    /* Apple Glassmorphism Light Mode */
+    --glass-card-bg: linear-gradient(145deg, rgba(255,255,255,0.25), rgba(255,255,255,0.1));
+    --glass-card-border: rgba(255,255,255,0.3);
+    --glass-card-shadow: 0 8px 32px rgba(0,0,0,0.08);
+    --glass-shine-opacity: 1;
+    --glass-sidebar-bg: rgba(255,255,255,0.15);
+    
+    /* Theme Config Integration */
+    --chart-stroke-width: 3px;
+    --chart-height: 256px;
+    --card-padding: 24px;
+    --card-gap: 24px;
+    --radius-card: 24px;
+    --radius-button: 12px;
+    --radius-input: 12px;
+    --radius-badge: 6px;
+    --animation-duration: 300ms;
+    --animation-easing: ease-in-out;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 84% 4.9%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    /* Apple Sonoma Dark Mode Colors */
+    --background: #0A0A0B;
+    --foreground: #E5E7EB;
+    --card: #1A1A1C;
+    --card-foreground: #E5E7EB;
+    --popover: 15 15 16 / 0.95;
+    --popover-foreground: #E5E7EB;
+    --primary: #34A7AD;
+    --primary-light: #5ED2D9;
+    --primary-dark: #26797E;
+    --primary-foreground: #FFFFFF;
+    --secondary: 30 41 59;
+    --secondary-foreground: #E5E7EB;
+    --muted: 30 41 59;
+    --muted-foreground: #9CA3AF;
+    --accent: #34A7AD;
+    --accent-foreground: #E5E7EB;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 94.1%;
+    --destructive-foreground: #FFFFFF;
+    --border: rgba(255, 255, 255, 0.1);
+    --input: rgba(255, 255, 255, 0.1);
+    --ring: #34A7AD;
+
+    /* Apple Glassmorphism Dark Mode - WICHTIG: Türkiser Border! */
+    --glass-card-bg: linear-gradient(145deg, rgba(26,26,28,0.95), rgba(15,15,16,0.9));
+    --glass-card-border: rgba(52,167,173,0.2);  /* Türkis im Dark Mode! */
+    --glass-card-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 24px rgba(52,167,173,0.1);
+    --glass-shine-opacity: 0.3;  /* Gedämpft im Dark Mode */
+    --glass-sidebar-bg: rgba(15,15,16,0.8);  /* Fast undurchsichtig */
   }
 }
 
@@ -56,6 +88,100 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    background: var(--background); /* Use CSS variable */
+    color: var(--foreground); /* Use CSS variable */
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+@layer components {
+  /* Apple Sonoma Glassmorphism */
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  }
+  
+  .glass-card {
+    background: linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+  }
+  
+  .glass-card:hover {
+    box-shadow: 0 12px 48px rgba(52, 167, 173, 0.15);
+  }
+  
+  .top-shine {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+    border-radius: 24px 24px 0 0;
+  }
+  
+  .glass-sidebar {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .glass-topbar {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .glass-button {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+  }
+  
+  .glass-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  .dark .glass-button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .dark .glass-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  .glass-dropdown {
+    background: var(--glass-card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-card-border);
+    box-shadow: var(--glass-card-shadow);
+  }
+  
+  .icon-container {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(145deg, rgba(52,167,173,0.15), rgba(94,210,217,0.1));
+    box-shadow: 0 4px 12px rgba(52, 167, 173, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }

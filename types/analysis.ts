@@ -63,12 +63,107 @@ export interface RankTracking {
   created_at: string;
 }
 
+export type AnalysisCategory = 
+  | 'overview' 
+  | 'research' 
+  | 'competition' 
+  | 'performance' 
+  | 'trends' 
+  | 'audience'
+  | 'legacy';
+
+export interface CombinedKeywordOverview {
+  keyword: string;
+  searchVolume: any;
+  difficulty: any;
+  trends: any;
+  related: any;
+  demographics?: any;
+}
+
+export interface KeywordCompetitionResult {
+  keyword: string;
+  difficulty: any;
+  competitors: any[];
+  totalCompetitors: number;
+  averageDifficulty: number;
+  apiEndpoint: string;
+  creditsUsed: number;
+}
+
+export interface KeywordPerformanceResult {
+  keyword: string;
+  clickstream: any;
+  adTraffic: any;
+  organicTraffic: number;
+  paidTraffic: number;
+  ctr: number;
+  estimatedClicks: number;
+  estimatedCost: number;
+  apiEndpoint: string;
+  creditsUsed: number;
+}
+
+export interface KeywordTrendsResult {
+  keyword: string;
+  historicalData: any[];
+  subregions: any[];
+  seasonalPatterns: any;
+  trendDirection: 'up' | 'down' | 'stable';
+  peakMonth: string;
+  apiEndpoint: string;
+  creditsUsed: number;
+}
+
+export interface KeywordAudienceResult {
+  keyword: string;
+  demographics: any;
+  bingAudience: any;
+  topAgeGroups: any[];
+  topProfessions: any[];
+  deviceDistribution: any;
+  targetingRecommendations: string[];
+  apiEndpoint: string;
+  creditsUsed: number;
+}
+
+export interface KeywordResearchResult {
+  source: 'related' | 'suggestions' | 'ideas' | 'for-site' | 'for-keywords';
+  data: any[];
+  totalResults: number;
+  apiEndpoint: string;
+  creditsUsed: number;
+}
+
+export interface LoadingStates {
+  basics: boolean;
+  related: boolean;
+  trends: boolean;
+  demographics: boolean;
+  research: boolean;
+}
+
+export interface CreditBreakdown {
+  related: number;
+  volume: number;
+  difficulty: number;
+  trends: number;
+  demographics: number;
+  bundle_discount: number;
+  total: number;
+}
+
 export type AnalysisType = 
   | 'keywords_related'
   | 'keywords_suggestions'
   | 'keywords_ideas'
   | 'keywords_difficulty'
   | 'keywords_overview'
+  | 'keywords_research'
+  | 'keywords_competition'
+  | 'keywords_performance'
+  | 'keywords_trends'
+  | 'keywords_audience'
   | 'google_ads_search_volume'
   | 'google_ads_keywords_for_site'
   | 'bing_search_volume'

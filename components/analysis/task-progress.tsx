@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { GlassCard } from '@/components/ui/glass-card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { getStatusBadgeStyle } from '@/lib/utils/theme-helpers';
 import { 
   Clock, 
   CheckCircle, 
@@ -78,19 +78,18 @@ export function TaskProgress({
         pollCount++;
         if (pollCount >= maxPolls) {
           setStatus('failed');
-          setError('Task timed out');
-          onError?.('Task timed out');
+          setError('Task timeout - maximum duration exceeded');
+          onError?.('Task timeout');
           return;
         }
 
-        // Continue polling if still processing
-        if (data.status === 'processing') {
-          setTimeout(pollTask, pollInterval);
-        }
+        // Continue polling
+        setTimeout(pollTask, pollInterval);
       } catch (err) {
+        console.error('Error polling task status:', err);
         setStatus('failed');
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        onError?.(err instanceof Error ? err.message : 'Unknown error');
+        setError('Failed to get task status');
+        onError?.('Failed to get task status');
       }
     };
 
@@ -101,21 +100,6 @@ export function TaskProgress({
       clearTimeout(initialDelay);
     };
   }, [taskId, pollInterval, maxDuration, elapsedTime, estimatedTime, onComplete, onError]);
-
-  const getStatusIcon = () => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="h-5 w-5 text-yellow-500" />;
-      case 'processing':
-        return <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />;
-      case 'completed':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'failed':
-        return <XCircle className="h-5 w-5 text-red-500" />;
-      default:
-        return <Clock className="h-5 w-5 text-gray-500" />;
-    }
-  };
 
   const getStatusText = () => {
     switch (status) {
@@ -129,21 +113,6 @@ export function TaskProgress({
         return 'Fehlgeschlagen';
       default:
         return 'Unbekannt';
-    }
-  };
-
-  const getStatusColor = () => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'processing':
-        return 'bg-blue-100 text-blue-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'failed':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -170,81 +139,107 @@ export function TaskProgress({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            {getStatusIcon()}
-            Analyse wird verarbeitet
-          </CardTitle>
-          <Badge className={getStatusColor()}>
-            {getStatusText()}
-          </Badge>
+    <GlassCard className="w-full max-w-md p-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <div 
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(145deg, rgba(52,167,173,0.15), rgba(94,210,217,0.1))',
+              boxShadow: '0 4px 12px rgba(52,167,173,0.15)'
+            }}
+          >
+            {status === 'processing' ? (
+              <Loader2 className="h-5 w-5 animate-spin" style={{ color: '#34A7AD' }} />
+            ) : status === 'completed' ? (
+              <CheckCircle className="h-5 w-5" style={{ color: '#10B981' }} />
+            ) : status === 'failed' ? (
+              <XCircle className="h-5 w-5" style={{ color: '#EF4444' }} />
+            ) : (
+              <Clock className="h-5 w-5" style={{ color: '#34A7AD' }} />
+            )}
+          </div>
+          <h3 className="text-foreground">Analyse wird verarbeitet</h3>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span>Fortschritt</span>
-            <span>{Math.round(progress)}%</span>
-          </div>
-          <Progress value={progress} className="h-2" />
+        {onCancel && status === 'processing' && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCancel}
+            className="h-8 w-8 p-0 hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-300"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
+      {/* Status Badge */}
+      <div className="flex items-center justify-center mb-4">
+        <span 
+          className="px-2 py-0.5 rounded-md text-xs font-medium"
+          style={getStatusBadgeStyle(
+            status === 'completed' ? 'success' :
+            status === 'failed' ? 'error' :
+            status === 'processing' ? 'info' : 'primary'
+          )}
+        >
+          {getStatusText()}
+        </span>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="space-y-2 mb-4">
+        <div className="flex justify-between text-sm text-foreground">
+          <span>Fortschritt</span>
+          <span>{Math.round(progress)}%</span>
         </div>
+        <Progress value={progress} className="h-2" />
+      </div>
 
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="text-muted-foreground">Verstrichene Zeit:</span>
-            <div className="font-medium">{formatTime(elapsedTime)}</div>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Task ID:</span>
-            <div className="font-mono text-xs">{taskId.slice(0, 8)}...</div>
+      {/* Time Information */}
+      <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+        <div>
+          <span className="text-muted-foreground">Verstrichene Zeit:</span>
+          <div className="font-medium text-foreground">{formatTime(elapsedTime)}</div>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Task ID:</span>
+          <div className="font-mono text-xs text-foreground">{taskId.slice(0, 8)}...</div>
+        </div>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div 
+          className="p-3 border rounded-lg"
+          style={{
+            backgroundColor: 'rgba(239,68,68,0.1)',
+            borderColor: 'rgba(239,68,68,0.2)'
+          }}
+        >
+          <div className="flex items-center gap-2 text-red-600 dark:text-red-400 text-sm">
+            <XCircle className="h-4 w-4" />
+            <span>{error}</span>
           </div>
         </div>
+      )}
 
-        {estimatedTime && (
-          <div className="text-sm">
-            <span className="text-muted-foreground">Geschätzte Dauer:</span>
-            <div className="font-medium">{formatTime(estimatedTime)}</div>
+      {/* Success Message */}
+      {status === 'completed' && result && (
+        <div 
+          className="p-3 border rounded-lg"
+          style={{
+            backgroundColor: 'rgba(16,185,129,0.1)',
+            borderColor: 'rgba(16,185,129,0.2)'
+          }}
+        >
+          <div className="flex items-center gap-2 text-green-600 dark:text-green-400 text-sm">
+            <CheckCircle className="h-4 w-4" />
+            <span>Task erfolgreich abgeschlossen!</span>
           </div>
-        )}
-
-        {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-            <div className="flex items-center gap-2 text-red-800">
-              <XCircle className="h-4 w-4" />
-              <span className="font-medium">Fehler:</span>
-            </div>
-            <p className="text-red-700 text-sm mt-1">{error}</p>
-          </div>
-        )}
-
-        {status === 'completed' && result && (
-          <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-            <div className="flex items-center gap-2 text-green-800">
-              <CheckCircle className="h-4 w-4" />
-              <span className="font-medium">Erfolgreich abgeschlossen!</span>
-            </div>
-            <p className="text-green-700 text-sm mt-1">
-              Die Analyse wurde erfolgreich verarbeitet.
-            </p>
-          </div>
-        )}
-
-        {status === 'processing' && onCancel && (
-          <div className="flex justify-end">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleCancel}
-              className="text-red-600 hover:text-red-700"
-            >
-              <X className="h-4 w-4 mr-2" />
-              Abbrechen
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      )}
+    </GlassCard>
   );
 }

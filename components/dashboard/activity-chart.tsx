@@ -1,7 +1,7 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { GlassCard } from '@/components/ui/glass-card';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface ActivityData {
   date: string;
@@ -16,50 +16,66 @@ interface ActivityChartProps {
 export function ActivityChart({ data }: ActivityChartProps) {
   if (data.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Aktivität (letzte 7 Tage)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[200px] flex items-center justify-center">
-            <p className="text-muted-foreground">Keine Daten verfügbar</p>
-          </div>
-        </CardContent>
-      </Card>
+      <GlassCard className="p-6">
+        <h3 className="mb-6 text-foreground">Aktivität (letzte 7 Tage)</h3>
+        <div className="h-64 flex items-center justify-center">
+          <p className="text-muted-foreground">Keine Daten verfügbar</p>
+        </div>
+      </GlassCard>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Aktivität (letzte 7 Tage)</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={200}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
+    <GlassCard className="p-6">
+      <h3 className="mb-6 text-foreground">Aktivität (letzte 7 Tage)</h3>
+      
+      <div className="h-64">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data}>
+            <defs>
+              <linearGradient id="colorAnalyses" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#34A7AD" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#34A7AD" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            
+            <CartesianGrid 
+              strokeDasharray="3 3" 
+              className="stroke-muted-foreground/20"
+            />
+            
             <XAxis 
               dataKey="date" 
-              tick={{ fontSize: 12 }}
+              className="text-xs"
+              tick={{ fill: 'var(--muted-foreground)' }}
             />
-            <YAxis tick={{ fontSize: 12 }} />
+            
+            <YAxis 
+              className="text-xs"
+              tick={{ fill: 'var(--muted-foreground)' }}
+            />
+            
             <Tooltip 
               contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '6px',
+                backgroundColor: 'var(--card)',
+                border: '1px solid var(--glass-card-border)',
+                borderRadius: '12px',
+                backdropFilter: 'blur(12px)',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+                color: 'var(--foreground)'
               }}
             />
-            <Line 
+            
+            <Area 
               type="monotone" 
               dataKey="analyses" 
-              stroke="hsl(var(--primary))" 
-              strokeWidth={2}
-              dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
+              stroke="#34A7AD" 
+              strokeWidth={3}
+              fill="url(#colorAnalyses)"
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
-      </CardContent>
-    </Card>
+      </div>
+    </GlassCard>
   );
 }
