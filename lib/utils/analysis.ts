@@ -223,13 +223,8 @@ export async function checkUserCredits(userId: string, required: number) {
     });
 
     if (error) {
-      // If the RPC function doesn't exist yet, use a workaround
-      logger.warn('RPC function not available, using workaround:', error);
-      
-      // For now, return a default value to avoid the RLS recursion issue
-      // This is a temporary fix until the migration is applied
-      logger.warn('Using temporary credit check - assuming user has credits');
-      return 100; // Assume user has credits for now
+      logger.error('RPC function get_user_credits failed:', error);
+      throw new Error(`Failed to check credits: ${error.message}`);
     }
 
     if (data < required) {

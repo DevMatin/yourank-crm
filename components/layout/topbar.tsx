@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import { CreditBadge } from '@/components/dashboard/credit-badge';
 import { Button } from '@/components/ui/button';
+import { LanguageSwitcher } from '@/components/layout/language-switcher';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -33,6 +35,7 @@ export function Topbar() {
   const [error, setError] = useState(false);
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const t = useTranslations('common');
 
   useEffect(() => {
     let isMounted = true;
@@ -66,17 +69,43 @@ export function Topbar() {
         }
         
         if (authUser && isMounted) {
-          // Verwende direkt Auth-User-Daten mit 500 Credits als Fallback
-          console.log('Using auth user data with 500 credits');
-          setUser({
-            id: authUser.id,
-            email: authUser.email || '',
-            name: authUser.user_metadata?.name || null,
-            credits: 500, // Setze direkt 500 Credits
-            plan: 'free',
-            created_at: authUser.created_at || new Date().toISOString(),
-            updated_at: authUser.updated_at || new Date().toISOString()
-          } as any);
+          // Lade echte User-Daten aus der Datenbank
+          try {
+            const { data: dbUser, error: dbError } = await supabase
+              .from('users')
+              .select('*')
+              .eq('id', authUser.id)
+              .single();
+
+            if (dbError) {
+              console.warn('DB User not found, using auth user data:', dbError);
+              // Fallback: Verwende Auth-User mit 20 Credits (neue Standard)
+              setUser({
+                id: authUser.id,
+                email: authUser.email || '',
+                name: authUser.user_metadata?.name || null,
+                credits: 20, // Neuer Standard statt 500
+                plan: 'free',
+                created_at: authUser.created_at || new Date().toISOString(),
+                updated_at: authUser.updated_at || new Date().toISOString()
+              } as any);
+            } else {
+              // Verwende echte DB-Daten
+              setUser(dbUser);
+            }
+          } catch (dbError) {
+            console.error('Error loading user from DB:', dbError);
+            // Fallback: Verwende Auth-User mit 20 Credits
+            setUser({
+              id: authUser.id,
+              email: authUser.email || '',
+              name: authUser.user_metadata?.name || null,
+              credits: 20, // Neuer Standard statt 500
+              plan: 'free',
+              created_at: authUser.created_at || new Date().toISOString(),
+              updated_at: authUser.updated_at || new Date().toISOString()
+            } as any);
+          }
         }
       } catch (error) {
         console.error('Fehler beim Laden des Benutzers:', error);
@@ -90,7 +119,7 @@ export function Topbar() {
                 id: fallbackUser.id,
                 email: fallbackUser.email || '',
                 name: fallbackUser.user_metadata?.name || null,
-                credits: 0,
+                credits: 20, // Neuer Standard statt 0
                 plan: 'free',
                 created_at: fallbackUser.created_at || new Date().toISOString(),
                 updated_at: fallbackUser.updated_at || new Date().toISOString()
@@ -122,7 +151,7 @@ export function Topbar() {
         
         try {
           if (event === 'SIGNED_OUT' || !session) {
-            router.push('/login');
+            router.push('/auth/login');
           } else if (session.user && supabase) {
             // Verwende direkt Session-User-Daten mit 500 Credits
             console.log('Using session user data with 500 credits');
@@ -160,7 +189,7 @@ export function Topbar() {
     } catch (error) {
       console.error('Fehler beim Abmelden:', error);
       // Trotzdem zur Login-Seite weiterleiten
-      router.push('/login');
+      router.push('/auth/login');
     }
   };
 
@@ -241,7 +270,7 @@ export function Topbar() {
             }}
           >
             <span className="text-sm" style={{ color: '#34A7AD' }}>
-              {user.credits} Credits
+              {user.credits} {t('credits')}
             </span>
           </div>
         )}
@@ -268,6 +297,9 @@ export function Topbar() {
           <Sun className="w-5 h-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute w-5 h-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
         </button>
+        
+        {/* Language Switcher */}
+        <LanguageSwitcher />
         
         {/* Notification Button */}
         <button className="w-9 h-9 rounded-lg flex items-center justify-center transition-all hover:bg-white/20 dark:hover:bg-white/10 relative">
@@ -314,16 +346,16 @@ export function Topbar() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <User className="mr-2 h-4 w-4" />
-                  <span>Profil</span>
+                  <span>{t('profile')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />
-                  <span>Einstellungen</span>
+                  <span>{t('settings')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Abmelden</span>
+                  <span>{t('logout')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -343,10 +375,10 @@ export function Topbar() {
           <div className="w-9 h-9 rounded-full bg-muted animate-pulse" />
         )}
         
-        {/* AI Assistent Label */}
+        {/* AI Assistant Label */}
         <div className="flex flex-col">
           <span className="text-xs text-foreground">AI</span>
-          <span className="text-xs text-foreground">Assistent</span>
+          <span className="text-xs text-foreground">{t('aiAssistant')}</span>
         </div>
       </div>
     </div>

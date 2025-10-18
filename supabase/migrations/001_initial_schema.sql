@@ -6,7 +6,7 @@ CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email TEXT UNIQUE NOT NULL,
     name TEXT,
-    credits INTEGER DEFAULT 100,
+    credits INTEGER DEFAULT 20,
     plan TEXT DEFAULT 'free',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -87,7 +87,7 @@ BEGIN
         NEW.id, 
         NEW.email, 
         COALESCE(NEW.raw_user_meta_data->>'name', NEW.email),
-        100,
+        20,
         'free'
     );
     RETURN NEW;

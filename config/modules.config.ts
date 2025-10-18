@@ -58,7 +58,7 @@ export const modules: Module[] = [
     name: "Keywords Data",
     description: "Keyword-Recherche und Difficulty-Analyse",
     icon: "Hash",
-    basePath: "/keywords",
+    basePath: "/dashboard/keywords",
     color: "green",
     tools: [
       // ===== NEUE HAUPTKATEGORIEN (SEMrush-Style) =====

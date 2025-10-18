@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { modules, getDeprecatedTools, getActiveTools, getComingSoonTools } from '@/config/modules.config';
 import { useUserSettings } from '@/lib/hooks/use-user-settings';
@@ -26,7 +27,8 @@ import {
   BarChart3,
   Target,
   TrendingUp,
-  Users
+  Users,
+  Bug
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
@@ -51,60 +53,11 @@ const iconMap = {
   Users,
 };
 
-// SEMrush-Style Keywords Hauptkategorien
-const keywordsMainCategories = [
-  {
-    id: 'overview',
-    name: 'Overview',
-    description: 'All-in-One Keyword Zusammenfassung',
-    href: '/keywords/overview-v2',
-    icon: 'BarChart3',
-    status: 'active' as const
-  },
-  {
-    id: 'research',
-    name: 'Research',
-    description: 'Keyword-Ideen und Vorschläge',
-    href: '/keywords/research',
-    icon: 'Search',
-    status: 'active' as const
-  },
-  {
-    id: 'competition',
-    name: 'Competition',
-    description: 'Keyword-Schwierigkeit und Wettbewerb',
-    href: '/keywords/competition',
-    icon: 'Target',
-    status: 'active' as const
-  },
-  {
-    id: 'performance',
-    name: 'Performance',
-    description: 'Traffic und Clickstream-Daten',
-    href: '/keywords/performance',
-    icon: 'TrendingUp',
-    status: 'active' as const
-  },
-  {
-    id: 'trends',
-    name: 'Trends',
-    description: 'Trend-Analysen und Demografie',
-    href: '/keywords/trends',
-    icon: 'BarChart3',
-    status: 'active' as const
-  },
-  {
-    id: 'audience',
-    name: 'Audience',
-    description: 'Zielgruppen und Targeting',
-    href: '/keywords/audience',
-    icon: 'Users',
-    status: 'active' as const
-  }
-];
+// SEMrush-Style Keywords Hauptkategorien - wird jetzt in der Komponente definiert
 
 export function Sidebar() {
   const pathname = usePathname();
+  const t = useTranslations('navigation');
   
   // State für Keywords Dropdown
   const [isKeywordsOpen, setIsKeywordsOpen] = useState(false);
@@ -129,7 +82,7 @@ export function Sidebar() {
     } else {
       // Nur beim ersten Laden: öffne wenn Keywords-Seite aktiv
       const currentPath = window.location.pathname;
-      const isKeywordsActive = currentPath.startsWith('/keywords');
+      const isKeywordsActive = currentPath.includes('/keywords');
       setIsKeywordsOpen(isKeywordsActive);
     }
     
@@ -148,6 +101,58 @@ export function Sidebar() {
       console.error('Failed to save legacy tools preference:', error);
     }
   };
+
+  // SEMrush-Style Keywords Hauptkategorien mit Übersetzungen
+  const keywordsMainCategories = [
+    {
+      id: 'overview',
+      name: t('overview'),
+      description: 'All-in-One Keyword Zusammenfassung',
+      href: '/dashboard/keywords/overview-v2',
+      icon: 'BarChart3',
+      status: 'active' as const
+    },
+    {
+      id: 'research',
+      name: t('research'),
+      description: 'Keyword-Ideen und Vorschläge',
+      href: '/dashboard/keywords/research',
+      icon: 'Search',
+      status: 'active' as const
+    },
+    {
+      id: 'competition',
+      name: t('competition'),
+      description: 'Keyword-Schwierigkeit und Wettbewerb',
+      href: '/dashboard/keywords/competition',
+      icon: 'Target',
+      status: 'active' as const
+    },
+    {
+      id: 'performance',
+      name: t('performance'),
+      description: 'Traffic und Clickstream-Daten',
+      href: '/dashboard/keywords/performance',
+      icon: 'TrendingUp',
+      status: 'active' as const
+    },
+    {
+      id: 'trends',
+      name: t('trends'),
+      description: 'Trend-Analysen und Demografie',
+      href: '/dashboard/keywords/trends',
+      icon: 'BarChart3',
+      status: 'active' as const
+    },
+    {
+      id: 'audience',
+      name: t('audience'),
+      description: 'Zielgruppen und Targeting',
+      href: '/dashboard/keywords/audience',
+      icon: 'Users',
+      status: 'active' as const
+    }
+  ];
 
   return (
     <div 
@@ -276,7 +281,7 @@ export function Sidebar() {
                           )}
                         >
                           <Filter className="h-3 w-3" />
-                          {showLegacyTools ? 'Legacy Tools ausblenden' : 'Legacy Tools anzeigen'}
+                          {showLegacyTools ? t('legacyToolsHide') : t('legacyTools')}
                         </button>
                       </div>
 
@@ -288,10 +293,10 @@ export function Sidebar() {
                               <div className="flex items-center gap-2">
                                 <span className="text-sm">🔧</span>
                                 <span className="text-xs font-medium text-muted-foreground">
-                                  Legacy Tools
+                                  {t('legacyToolsLabel')}
                                 </span>
                                 <span className="text-xs bg-destructive/20 text-destructive px-1.5 py-0.5 rounded-full backdrop-blur-sm border border-destructive/30">
-                                  Deprecated
+                                  {t('deprecated')}
                                 </span>
                                 <ChevronRight className="h-3 w-3 text-muted-foreground ml-auto transition-transform duration-200 data-[state=open]:rotate-90" />
                               </div>
@@ -373,6 +378,34 @@ export function Sidebar() {
             </div>
           );
         })}
+        
+        {/* Debug Section */}
+        <div className="mt-8 pt-4 border-t border-border/50">
+          <div className="px-6 py-2">
+            <div className="flex items-center gap-2 mb-3">
+              <Bug className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                {t('debugTools')}
+              </span>
+            </div>
+            
+            <Link
+              href="/debug/logs"
+              className={cn(
+                "flex items-center space-x-3 px-3 py-2 text-sm rounded-lg transition-all duration-300 backdrop-blur-sm",
+                pathname === "/debug/logs"
+                  ? "bg-white/10 text-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-white/20 dark:hover:bg-white/10"
+              )}
+            >
+              <FileText className="h-4 w-4" style={{ color: pathname === "/debug/logs" ? '#34A7AD' : undefined }} />
+              <span>{t('apiDebugLogs')}</span>
+              <span className="text-xs bg-teal-500/20 text-teal-600 dark:text-teal-400 px-1.5 py-0.5 rounded-full backdrop-blur-sm border border-teal-500/30 ml-auto">
+                {t('dev')}
+              </span>
+            </Link>
+          </div>
+        </div>
       </nav>
     </div>
   );

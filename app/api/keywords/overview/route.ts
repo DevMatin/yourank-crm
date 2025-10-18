@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { dataForSeoClient } from '@/lib/dataforseo/client';
 import { checkUserCredits, deductCredits, saveAnalysis, updateAnalysis } from '@/lib/utils/analysis';
 import { logger } from '@/lib/logger';
+import { validateOverviewData } from '@/lib/utils/dataforseo-validator';
 import { 
   DataforseoLabsGoogleRelatedKeywordsLiveRequestInfo,
   KeywordsDataGoogleAdsSearchVolumeLiveRequestInfo,
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { keyword, location = 'Germany', language = 'German' } = body;
+    const { keyword, location = 'Germany', language = 'German', selectedApis = ['searchVolume', 'difficulty', 'trends', 'demographics', 'relatedKeywords'] } = body;
 
     // Validate input
     if (!keyword || typeof keyword !== 'string') {
@@ -37,9 +38,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check credits (Bundle-Preis: 3 Credits statt 5)
-    const bundleCredits = 3;
-    await checkUserCredits(user.id, bundleCredits);
+    // Calculate credits based on selected APIs (Bundle-Preise)
+    const calculateCredits = (apis: string[]) => {
+      const count = apis.length;
+      if (count >= 5) return 3;
+      if (count >= 4) return 3;
+      if (count >= 3) return 2;
+      if (count >= 2) return 2;
+      if (count === 1) return 1;
+      return 0;
+    };
+    
+    const requiredCredits = calculateCredits(selectedApis);
+    await checkUserCredits(user.id, requiredCredits);
 
     // Save analysis record
     const analysisRecord = await saveAnalysis(
@@ -47,8 +58,8 @@ export async function POST(request: NextRequest) {
       'keywords_overview',
       user.id,
       undefined,
-      bundleCredits,
-      'overview' // Neue Kategorie
+      requiredCredits,
+      'overview'
     );
 
     try {
@@ -56,14 +67,17 @@ export async function POST(request: NextRequest) {
         keyword: keyword.trim(),
         location,
         language,
+        selectedApis,
+        requiredCredits,
         userId: user.id,
         timestamp: new Date().toISOString()
       });
 
-      // Sequentielles Laden mit Promise.allSettled für bessere Performance
-      const results = await Promise.allSettled([
-        // 1. Related Keywords
-        (async () => {
+      // Conditional API calls based on selectedApis
+      const apiCalls: Promise<any>[] = [];
+      
+      if (selectedApis.includes('relatedKeywords')) {
+        apiCalls.push((async () => {
           logger.info('🔗 Starting Related Keywords API call');
           const relatedRequest = new DataforseoLabsGoogleRelatedKeywordsLiveRequestInfo();
           relatedRequest.keyword = keyword.trim();
@@ -75,11 +89,12 @@ export async function POST(request: NextRequest) {
           
           const result = await dataForSeoClient.labs.googleRelatedKeywordsLive([relatedRequest]);
           logger.info('✅ Related Keywords API completed successfully');
-          return result;
-        })(),
-        
-        // 2. Search Volume
-        (async () => {
+          return { type: 'relatedKeywords', data: result };
+        })());
+      }
+      
+      if (selectedApis.includes('searchVolume')) {
+        apiCalls.push((async () => {
           logger.info('📊 Starting Search Volume API call');
           const volumeRequest = new KeywordsDataGoogleAdsSearchVolumeLiveRequestInfo();
           volumeRequest.keywords = [keyword.trim()];
@@ -88,11 +103,12 @@ export async function POST(request: NextRequest) {
           
           const result = await dataForSeoClient.keywords.googleAdsSearchVolumeLive([volumeRequest]);
           logger.info('✅ Search Volume API completed successfully');
-          return result;
-        })(),
-        
-        // 3. Keyword Difficulty
-        (async () => {
+          return { type: 'searchVolume', data: result };
+        })());
+      }
+      
+      if (selectedApis.includes('difficulty')) {
+        apiCalls.push((async () => {
           logger.info('🎯 Starting Keyword Difficulty API call');
           const difficultyRequest = new DataforseoLabsGoogleBulkKeywordDifficultyLiveRequestInfo();
           difficultyRequest.keywords = [keyword.trim()];
@@ -101,11 +117,12 @@ export async function POST(request: NextRequest) {
           
           const result = await dataForSeoClient.labs.googleBulkKeywordDifficultyLive([difficultyRequest]);
           logger.info('✅ Keyword Difficulty API completed successfully');
-          return result;
-        })(),
-        
-        // 4. Google Trends (optional)
-        (async () => {
+          return { type: 'difficulty', data: result };
+        })());
+      }
+      
+      if (selectedApis.includes('trends')) {
+        apiCalls.push((async () => {
           logger.info('📈 Starting Google Trends API call');
           const trendsRequest = new KeywordsDataGoogleTrendsExploreLiveRequestInfo();
           trendsRequest.keywords = [keyword.trim()];
@@ -116,69 +133,118 @@ export async function POST(request: NextRequest) {
           
           const result = await dataForSeoClient.keywords.googleTrendsExploreLive([trendsRequest]);
           logger.info('✅ Google Trends API completed successfully');
-          return result;
-        })(),
-        
-        // 5. Demographics (optional)
-        (async () => {
+          return { type: 'trends', data: result };
+        })());
+      }
+      
+      if (selectedApis.includes('demographics')) {
+        apiCalls.push((async () => {
           logger.info('👥 Starting Demographics API call');
           const demographicsRequest = new KeywordsDataDataforseoTrendsDemographyLiveRequestInfo();
           demographicsRequest.keywords = [keyword.trim()];
           demographicsRequest.location_name = location;
-          demographicsRequest.language_name = language;
           
           const result = await dataForSeoClient.keywords.dataforseoTrendsDemographyLive([demographicsRequest]);
           logger.info('✅ Demographics API completed successfully');
-          return result;
-        })()
-      ]);
+          return { type: 'demographics', data: result };
+        })());
+      }
 
-      // Debug: Log individual API results
-      logger.info('📋 Individual API Results:');
+      const results = await Promise.allSettled(apiCalls);
+
+      // Log results with improved formatting
+      const apiNames = ['Related Keywords', 'Search Volume', 'Keyword Difficulty', 'Google Trends', 'Demographics'];
       results.forEach((result, index) => {
-        const apiNames = ['Related Keywords', 'Search Volume', 'Keyword Difficulty', 'Google Trends', 'Demographics'];
+        const apiName = apiNames[index] || `API ${index + 1}`;
+        
         if (result.status === 'fulfilled') {
-          logger.info(`  ✅ ${apiNames[index]}: SUCCESS`);
+          logger.apiStatus(apiName, 'SUCCESS', {
+            responseSize: JSON.stringify(result.value).length,
+            hasData: !!result.value,
+            timestamp: new Date().toISOString()
+          });
+          logger.apiDebug(`${apiName} - Response Data`, result.value);
         } else {
-          logger.error(`  ❌ ${apiNames[index]}: FAILED - ${result.reason}`);
+          logger.apiStatus(apiName, 'FAILED', {
+            error: result.reason,
+            timestamp: new Date().toISOString()
+          });
+          logger.apiDebug(`${apiName} - Error Details`, {
+            error: result.reason,
+            timestamp: new Date().toISOString()
+          });
         }
       });
 
-      // Error-Handling pro Sektion
+      // Build overview object with conditional data
       const overview: CombinedKeywordOverview = {
         keyword: keyword.trim(),
-        related: results[0].status === 'fulfilled' ? results[0].value : null,
-        searchVolume: results[1].status === 'fulfilled' ? results[1].value : null,
-        difficulty: results[2].status === 'fulfilled' ? results[2].value : null,
-        trends: results[3].status === 'fulfilled' ? results[3].value : null,
-        demographics: results[4].status === 'fulfilled' ? results[4].value : null
+        related: null,
+        searchVolume: null,
+        difficulty: null,
+        trends: null,
+        demographics: null
       };
 
-      // Credit-Breakdown für Transparenz
-      const creditBreakdown: CreditBreakdown = {
-        related: 1,
-        volume: 1,
-        difficulty: 1,
-        trends: 1,
-        demographics: 1,
-        bundle_discount: -3,
-        total: bundleCredits
-      };
+      // Process results and assign to overview
+      results.forEach((result) => {
+        if (result.status === 'fulfilled') {
+          const { type, data } = result.value;
+          switch (type) {
+            case 'relatedKeywords':
+              overview.related = data;
+              break;
+            case 'searchVolume':
+              overview.searchVolume = data;
+              break;
+            case 'difficulty':
+              overview.difficulty = data;
+              break;
+            case 'trends':
+              overview.trends = data;
+              break;
+            case 'demographics':
+              overview.demographics = data;
+              break;
+          }
+        }
+      });
 
-      // Logging für Debugging
-      logger.info('Overview API Results:', {
-        keyword: overview.keyword,
-        relatedSuccess: results[0].status === 'fulfilled',
-        volumeSuccess: results[1].status === 'fulfilled',
-        difficultySuccess: results[2].status === 'fulfilled',
-        trendsSuccess: results[3].status === 'fulfilled',
-        demographicsSuccess: results[4].status === 'fulfilled',
-        totalResults: Object.values(overview).filter(v => v !== null).length
+      // Validate the overview data before saving
+      const validation = validateOverviewData(overview);
+      
+      logger.info('Overview Data Validation in API', {
+        isValid: validation.isValid,
+        totalErrors: validation.errors.length,
+        totalWarnings: validation.warnings.length,
+        apiStatus: {
+          searchVolume: validation.apiStatus.searchVolume.isValid,
+          difficulty: validation.apiStatus.difficulty.isValid,
+          trends: validation.apiStatus.trends.isValid,
+          demographics: validation.apiStatus.demographics.isValid,
+          relatedKeywords: validation.apiStatus.relatedKeywords.isValid
+        }
       });
       
-      // Debug: Log actual data structure
-      logger.info('Trends Data Structure:', JSON.stringify(overview.trends, null, 2));
-      logger.info('Demographics Data Structure:', JSON.stringify(overview.demographics, null, 2));
+      // Log warnings and errors
+      if (validation.warnings.length > 0) {
+        logger.warn('Overview Data Warnings in API', validation.warnings);
+      }
+      
+      if (validation.errors.length > 0) {
+        logger.error('Overview Data Errors in API', validation.errors);
+      }
+
+      // Calculate credit breakdown
+      const creditBreakdown: CreditBreakdown = {
+        total: requiredCredits,
+        related: selectedApis.includes('relatedKeywords') ? 1 : 0,
+        volume: selectedApis.includes('searchVolume') ? 1 : 0,
+        difficulty: selectedApis.includes('difficulty') ? 1 : 0,
+        trends: selectedApis.includes('trends') ? 1 : 0,
+        demographics: selectedApis.includes('demographics') ? 1 : 0,
+        bundle_discount: 0
+      };
 
       // Update analysis with results
       await updateAnalysis(analysisRecord.id, {
@@ -187,84 +253,87 @@ export async function POST(request: NextRequest) {
           overview,
           creditBreakdown,
           timestamp: new Date().toISOString(),
-          source: 'DataForSEO API (Combined)'
+          source: 'DataForSEO API (Combined)',
+          validation: validation,
+          selectedApis
         }
       });
 
       // Deduct credits
-      await deductCredits(user.id, bundleCredits);
+      await deductCredits(user.id, requiredCredits);
+
+      const successCount = results.filter(r => r.status === 'fulfilled').length;
+      
+      logger.info('🎉 Overview Analysis Completed:', {
+        keyword: keyword.trim(),
+        successCount,
+        totalApis: selectedApis.length,
+        creditsUsed: requiredCredits,
+        analysisId: analysisRecord.id
+      });
 
       const response = {
         success: true,
         data: overview,
         analysisId: analysisRecord.id,
-        creditsUsed: bundleCredits,
+        creditsUsed: requiredCredits,
         creditBreakdown,
-        source: 'DataForSEO API (Combined Overview)',
-        timestamp: new Date().toISOString(),
-        partialResults: {
-          related: results[0].status === 'fulfilled',
-          volume: results[1].status === 'fulfilled',
-          difficulty: results[2].status === 'fulfilled',
-          trends: results[3].status === 'fulfilled',
-          demographics: results[4].status === 'fulfilled'
-        }
+        validation: {
+          isValid: validation.isValid,
+          errors: validation.errors,
+          warnings: validation.warnings,
+          apiStatus: validation.apiStatus
+        },
+        selectedApis
       };
-
-      logger.info('🎉 Overview Analysis Completed:', {
-        keyword: overview.keyword,
-        successCount: Object.values(response.partialResults).filter(Boolean).length,
-        totalApis: 5,
-        creditsUsed: bundleCredits,
-        analysisId: analysisRecord.id
-      });
 
       return NextResponse.json(response);
 
-    } catch (apiError) {
-      logger.error('Overview API Error:', apiError);
-      
-      // Update analysis with error
-      await updateAnalysis(analysisRecord.id, {
-        status: 'failed',
-        result: { error: 'API call failed', details: apiError instanceof Error ? apiError.message : 'Unknown error' }
+    } catch (error) {
+      logger.error('Overview Analysis Failed:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        keyword: keyword.trim(),
+        userId: user.id,
+        timestamp: new Date().toISOString()
       });
 
-      // Check if it's a connection error
-      const isConnectionError = apiError instanceof Error && 
-        (apiError.message.includes('ECONNRESET') || 
-         apiError.message.includes('aborted') ||
-         apiError.message.includes('network'));
+      // Update analysis record with error
+      await updateAnalysis(analysisRecord.id, {
+        status: 'failed'
+      });
 
       return NextResponse.json(
         { 
-          error: isConnectionError 
-            ? 'Verbindungsfehler zur DataForSEO API. Bitte versuche es erneut.'
-            : 'Failed to fetch overview data. Please try again.',
-          success: false,
-          details: apiError instanceof Error ? apiError.message : 'Unknown error',
-          isConnectionError
+          error: 'Analysis failed', 
+          details: error instanceof Error ? error.message : 'Unknown error',
+          analysisId: analysisRecord.id
         },
         { status: 500 }
       );
     }
 
   } catch (error) {
-    logger.error('Overview API Error:', error);
-    
-    if (error instanceof Error && error.message.includes('Insufficient credits')) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 402 }
-      );
-    }
-    
+    logger.error('Overview API Route Error:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
+
     return NextResponse.json(
-      { 
-        error: error instanceof Error ? error.message : 'Internal server error',
-        success: false 
-      },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
+}
+
+function getApiDescription(api: string): string {
+  const descriptions: Record<string, string> = {
+    'searchVolume': 'Search Volume & CPC Data',
+    'difficulty': 'Keyword Difficulty Score',
+    'trends': 'Google Trends Analysis',
+    'demographics': 'User Demographics',
+    'relatedKeywords': 'Related Keywords Research'
+  };
+  return descriptions[api] || api;
 }

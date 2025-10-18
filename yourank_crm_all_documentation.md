@@ -1588,6 +1588,85 @@ This document outlines the key user journeys, interactions, and system behaviors
 
 This comprehensive user flow document covers the core interactions for YouRank.ai, from initial login to advanced features and error handling, ensuring a clear understanding of the user experience and system behavior.
 
+## Internationalization (i18n) Guidelines
+
+### Multi-Language Support Implementation
+
+YouRank.ai implements comprehensive internationalization using `next-intl` for Next.js 15 App Router, supporting multiple languages with automatic detection and manual switching capabilities.
+
+#### Supported Languages
+- **Primary**: Deutsch (DE) - Default language
+- **Secondary**: Englisch (EN) - Full implementation
+- **Prepared**: Spanisch (ES), Französisch (FR) - Structure ready for future implementation
+
+#### Technical Implementation
+- **Library**: `next-intl` v3.x for Next.js 15 App Router compatibility
+- **Routing**: All pages wrapped in `[locale]` folder structure
+- **Detection**: Automatic browser language detection with manual override
+- **Persistence**: User language preference stored in database and cookies
+- **Type Safety**: Full TypeScript support for translation keys
+
+#### Translation File Structure
+```
+messages/
+├── de.json          # German translations (primary)
+├── en.json          # English translations
+├── es.json          # Spanish (prepared, empty)
+├── fr.json          # French (prepared, empty)
+└── index.ts         # Type exports
+```
+
+#### Namespace Organization
+- `common`: Shared UI elements (buttons, labels, status messages)
+- `navigation`: Menu items, breadcrumbs, module names
+- `keywords`: Keyword research specific translations
+- `auth`: Authentication related texts
+- `api`: Server-side error messages and responses
+
+### Cursor AI Guidelines for i18n
+
+#### When Creating New Pages or Components
+1. **Always use translation keys** instead of hardcoded German text
+2. **Check existing translations** before creating new keys
+3. **Follow namespace structure** for organized translation management
+4. **Implement both DE and EN** translations simultaneously
+5. **Use proper TypeScript types** for translation keys
+
+#### Translation Key Patterns
+```typescript
+// ✅ Correct usage
+const t = useTranslations('keywords.overview');
+return <h1>{t('title')}</h1>;
+
+// ❌ Incorrect usage
+return <h1>Keyword Übersicht</h1>;
+```
+
+#### Required Checks for Cursor AI
+1. **Verify all UI text uses translation keys** - No hardcoded German/English text
+2. **Check translation completeness** - Both DE and EN keys must exist
+3. **Validate namespace usage** - Correct namespace for context
+4. **Ensure proper fallbacks** - English fallback for missing translations
+5. **Test language switching** - Verify smooth transitions between languages
+
+#### Language Switcher Integration
+- **Location**: Topbar with glassmorphism design
+- **Functionality**: Dropdown with flag icons and language names
+- **Persistence**: Saves preference to database and localStorage
+- **Styling**: Teal accent (`#34A7AD`) for active language, `rounded-xl` buttons
+
+#### Database Integration
+```sql
+-- User language preference storage
+ALTER TABLE user_settings 
+ADD COLUMN preferred_language VARCHAR(5) DEFAULT 'de';
+```
+
+#### API Route Considerations
+- **Locale Detection**: Extract from headers or query parameters
+- **Error Messages**: Return translated error messages
+- **Success Responses**: Use appropriate language for user feedback
+
 ## Styling Guidelines
 STYLING GUIDELINES: YouRank.ai
 

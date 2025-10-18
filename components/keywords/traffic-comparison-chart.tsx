@@ -1,6 +1,12 @@
 import { GlassCard } from '@/components/ui/glass-card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, MousePointer, DollarSign, Eye, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { 
+  calculateDonutSegments, 
+  calculateDonutSegmentPath,
+  CHART_CLASSES 
+} from '@/lib/utils/chart-helpers';
 
 interface TrafficComparisonChartProps {
   organicTraffic: number;
@@ -17,6 +23,8 @@ export function TrafficComparisonChart({
   paidCtr, 
   loading = false 
 }: TrafficComparisonChartProps) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
   if (loading) {
     return (
       <GlassCard className="p-6">
@@ -53,8 +61,20 @@ export function TrafficComparisonChart({
   ];
 
   const ctrData = [
-    { name: 'Organic CTR', value: organicCtr, color: '#10B981' },
-    { name: 'Paid CTR', value: paidCtr, color: '#34A7AD' }
+    { 
+      name: 'Organic CTR', 
+      value: organicCtr, 
+      color: '#10B981', 
+      gradientId: 'organic-gradient',
+      count: Math.round(organicCtr * 1000) // Realistische Anzahl basierend auf CTR
+    },
+    { 
+      name: 'Paid CTR', 
+      value: paidCtr, 
+      color: '#34A7AD', 
+      gradientId: 'paid-gradient',
+      count: Math.round(paidCtr * 1000) // Realistische Anzahl basierend auf CTR
+    }
   ];
 
   const formatNumber = (num: number) => {
@@ -173,69 +193,108 @@ export function TrafficComparisonChart({
           <h3 className="text-foreground">Click-Through Rate Comparison</h3>
         </div>
         
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={ctrData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={5}
-                dataKey="value"
-              >
-                {ctrData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip 
-                formatter={(value) => `${Number(value).toFixed(2)}%`}
-                contentStyle={{
-                  backgroundColor: 'var(--card)',
-                  border: '1px solid var(--glass-card-border)',
-                  borderRadius: '12px',
-                  backdropFilter: 'blur(12px)',
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
-                  color: 'var(--foreground)'
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+        <div className="h-64 flex items-center justify-center">
+          <div className="relative">
+            <svg width="200" height="200" viewBox="0 0 200 200" className="transform -rotate-90">
+              <defs>
+                {/* Organic Gradient (Green) */}
+                <linearGradient id="organic-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="rgba(16,185,129,0.8)" />
+                  <stop offset="100%" stopColor="rgba(16,185,129,0.6)" />
+                </linearGradient>
+                
+                {/* Paid Gradient (Teal) */}
+                <linearGradient id="paid-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="rgba(52,167,173,0.8)" />
+                  <stop offset="100%" stopColor="rgba(94,210,217,0.6)" />
+                </linearGradient>
+              </defs>
+              
+              {(() => {
+                const segments = calculateDonutSegments(ctrData);
+                
+                return ctrData.map((segment, index) => {
+                  const segmentData = segments[index];
+                  const outerRadius = hoveredIndex === index ? 100 : 95;
+                  const innerRadius = hoveredIndex === index ? 55 : 60;
+                  
+                  const path = calculateDonutSegmentPath(
+                    segmentData.startAngle,
+                    segmentData.endAngle,
+                    outerRadius,
+                    innerRadius
+                  );
+                  
+                  return (
+                    <path
+                      key={index}
+                      d={path}
+                      fill={`url(#${segment.gradientId})`}
+                      stroke={segment.color === '#10B981' ? 'rgba(16,185,129,0.4)' : 'rgba(52,167,173,0.4)'}
+                      strokeWidth="1"
+                      className={CHART_CLASSES.radialSegment}
+                      style={{
+                        filter: hoveredIndex === index 
+                          ? `drop-shadow(0 0 8px ${segment.color === '#10B981' ? 'rgba(16,185,129,0.4)' : 'rgba(52,167,173,0.4)'})`
+                          : `drop-shadow(0 0 4px ${segment.color === '#10B981' ? 'rgba(16,185,129,0.2)' : 'rgba(52,167,173,0.2)'})`
+                      }}
+                      onMouseEnter={() => setHoveredIndex(index)}
+                      onMouseLeave={() => setHoveredIndex(null)}
+                    />
+                  );
+                });
+              })()}
+            </svg>
+            
+            {/* Center Label */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-lg font-bold text-foreground">
+                  {organicCtr > paidCtr ? 'Organic CTR' : 'Paid CTR'}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {Math.max(organicCtr, paidCtr).toFixed(2)}%
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         
         {/* CTR Summary */}
-        <div className="space-y-2 mt-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 dark:bg-green-400 rounded-full"></div>
-              <span className="text-sm text-foreground">Organic CTR</span>
-            </div>
-            <span 
-              className="px-2 py-0.5 rounded-md text-xs font-medium"
-              style={{
-                backgroundColor: 'rgba(16,185,129,0.15)',
-                color: '#10B981'
-              }}
+        <div className="space-y-3 mt-4">
+          {ctrData.map((item, index) => (
+            <div 
+              key={index}
+              className={`${CHART_CLASSES.legendItem} ${hoveredIndex === index ? 'bg-opacity-10' : ''}`}
+              onMouseEnter={() => setHoveredIndex(index)}
+              onMouseLeave={() => setHoveredIndex(null)}
             >
-              {organicCtr.toFixed(2)}%
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#34A7AD' }}></div>
-              <span className="text-sm text-foreground">Paid CTR</span>
+              <div className="flex items-center gap-3">
+                <div 
+                  className={`${CHART_CLASSES.indicator} ${item.color === '#10B981' ? CHART_CLASSES.indicatorSuccess : ''}`}
+                  style={{ 
+                    background: item.color === '#10B981' 
+                      ? 'linear-gradient(145deg, rgba(16,185,129,0.8), rgba(16,185,129,0.6))'
+                      : 'linear-gradient(145deg, rgba(52,167,173,0.8), rgba(94,210,217,0.6))'
+                  }}
+                />
+                <div>
+                  <div className="text-sm font-medium text-foreground">{item.name}</div>
+                </div>
+              </div>
+              <span 
+                className={CHART_CLASSES.badge}
+                style={{
+                  backgroundColor: item.color === '#10B981' 
+                    ? 'rgba(16,185,129,0.15)' 
+                    : 'rgba(52,167,173,0.15)',
+                  color: item.color
+                }}
+              >
+                {item.value.toFixed(2)}%
+              </span>
             </div>
-            <span 
-              className="px-2 py-0.5 rounded-md text-xs font-medium"
-              style={{
-                backgroundColor: 'rgba(52,167,173,0.15)',
-                color: '#34A7AD'
-              }}
-            >
-              {paidCtr.toFixed(2)}%
-            </span>
-          </div>
+          ))}
         </div>
       </GlassCard>
     </div>

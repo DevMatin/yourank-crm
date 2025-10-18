@@ -1,6 +1,6 @@
 import { GlassCard } from '@/components/ui/glass-card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, AlertTriangle } from 'lucide-react';
 
 interface TrendData {
   month: string;
@@ -29,9 +29,21 @@ export function TrendChart({ data, loading = false, keyword }: TrendChartProps) 
             <TrendingUp className="h-5 w-5" style={{color: '#34A7AD'}} />
           </div>
           <h3 className="text-foreground">Search Volume Trend</h3>
+          {!loading && (!data || data.length === 0) && (
+            <AlertTriangle className="h-4 w-4 text-orange-500" />
+          )}
         </div>
         <div className="h-64 flex items-center justify-center">
-          <span className="text-muted-foreground">Loading trend data...</span>
+          <div className="text-center">
+            <span className="text-muted-foreground">
+              {loading ? 'Loading trend data...' : 'No trend data available'}
+            </span>
+            {!loading && (!data || data.length === 0) && (
+              <p className="text-xs text-orange-500 mt-1">
+                Trend data could not be loaded
+              </p>
+            )}
+          </div>
         </div>
       </GlassCard>
     );

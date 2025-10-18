@@ -10,7 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { TrendingUp, TrendingDown, Minus, Hash } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Hash, AlertTriangle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface RelatedKeyword {
   keyword: string;
@@ -26,6 +27,19 @@ interface RelatedKeywordsTableProps {
 }
 
 export function RelatedKeywordsTable({ data }: RelatedKeywordsTableProps) {
+  const t = useTranslations('keywords');
+  
+  if (!data || data.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <AlertTriangle className="h-8 w-8 text-orange-500 mx-auto mb-2" />
+        <p className="text-muted-foreground">{t('noRelatedKeywordsFound')}</p>
+        <p className="text-xs text-orange-500 mt-1">
+          {t('relatedKeywordsDataNotLoaded')}
+        </p>
+      </div>
+    );
+  }
   const getCompetitionColor = (competition: number) => {
     if (competition < 0.3) return {
       backgroundColor: 'rgba(16,185,129,0.15)',
@@ -42,9 +56,9 @@ export function RelatedKeywordsTable({ data }: RelatedKeywordsTableProps) {
   };
 
   const getCompetitionText = (competition: number) => {
-    if (competition < 0.3) return 'Niedrig';
-    if (competition < 0.7) return 'Mittel';
-    return 'Hoch';
+    if (competition < 0.3) return t('low');
+    if (competition < 0.7) return t('medium');
+    return t('high');
   };
 
   const getTrendIcon = (trend: number) => {

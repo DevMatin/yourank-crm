@@ -1,0 +1,167 @@
+{
+  "common": {
+    "dashboard": "Tableau de bord",
+    "keywords": "Mots-clés",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "export": "Exporter",
+    "import": "Importer",
+    "refresh": "Actualiser",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "close": "Fermer",
+    "open": "Ouvrir",
+    "yes": "Oui",
+    "no": "Non",
+    "ok": "OK",
+    "credits": "Crédits",
+    "aiAssistant": "Assistant IA",
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "logout": "Déconnexion",
+    "login": "Connexion",
+    "signup": "S'inscrire",
+    "language": "Langue",
+    "theme": "Thème",
+    "notifications": "Notifications",
+    "messages": "Messages"
+  },
+  "navigation": {
+    "keywords": "Mots-clés",
+    "overview": "Aperçu",
+    "research": "Recherche",
+    "competition": "Concurrence",
+    "performance": "Performance",
+    "trends": "Tendances",
+    "audience": "Audience",
+    "legacyTools": "Afficher les outils hérités",
+    "legacyToolsHide": "Masquer les outils hérités",
+    "legacyToolsLabel": "Outils hérités",
+    "deprecated": "Obsolète",
+    "new": "Nouveau",
+    "beta": "Bêta",
+    "soon": "Bientôt",
+    "dev": "Dev",
+    "backlinks": "Liens retour",
+    "serp": "SERP",
+    "onpage": "Sur page",
+    "content": "Contenu",
+    "domain": "Domaine",
+    "business": "Entreprise",
+    "merchant": "Marchand",
+    "labs": "Laboratoires",
+    "databases": "Bases de données",
+    "appdata": "Données d'application",
+    "debugTools": "Outils de débogage",
+    "apiDebugLogs": "Journaux de débogage API"
+  },
+  "keywords": {
+    "overview": {
+      "title": "Aperçu des mots-clés",
+      "subtitle": "Résumé complet des mots-clés",
+      "searchPlaceholder": "Entrez un mot-clé...",
+      "analyze": "Analyser",
+      "location": "Localisation",
+      "language": "Langue",
+      "selectApis": "Sélectionner les APIs",
+      "searchVolume": "Volume de recherche",
+      "difficulty": "Difficulté",
+      "trends": "Tendances",
+      "demographics": "Démographie",
+      "relatedKeywords": "Mots-clés liés",
+      "noResults": "Aucun résultat trouvé",
+      "errorOccurred": "Une erreur s'est produite",
+      "tryAgain": "Réessayer",
+      "history": "Historique",
+      "lastSearches": "Dernières recherches",
+      "clearHistory": "Effacer l'historique",
+      "exportResults": "Exporter les résultats",
+      "shareResults": "Partager les résultats"
+    },
+    "research": {
+      "title": "Recherche de mots-clés",
+      "subtitle": "Idées et suggestions de mots-clés"
+    },
+    "competition": {
+      "title": "Concurrence des mots-clés",
+      "subtitle": "Difficulté et concurrence des mots-clés"
+    },
+    "performance": {
+      "title": "Performance des mots-clés",
+      "subtitle": "Données de trafic et de flux de clics"
+    },
+    "trends": {
+      "title": "Tendances des mots-clés",
+      "subtitle": "Analyse des tendances et démographie"
+    },
+    "audience": {
+      "title": "Audience des mots-clés",
+      "subtitle": "Audience cible et ciblage"
+    }
+  },
+  "auth": {
+    "login": "Connexion",
+    "signup": "Inscription",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "rememberMe": "Se souvenir de moi",
+    "noAccount": "Pas de compte ?",
+    "hasAccount": "Déjà un compte ?",
+    "signInWith": "Se connecter avec",
+    "signUpWith": "S'inscrire avec",
+    "termsAndConditions": "Termes et conditions",
+    "privacyPolicy": "Politique de confidentialité",
+    "agreeToTerms": "J'accepte les termes et conditions"
+  },
+  "api": {
+    "errors": {
+      "keywordRequired": "Le mot-clé est requis",
+      "locationRequired": "La localisation est requise",
+      "languageRequired": "La langue est requise",
+      "invalidKeyword": "Mot-clé invalide",
+      "invalidLocation": "Localisation invalide",
+      "invalidLanguage": "Langue invalide",
+      "insufficientCredits": "Crédits insuffisants",
+      "apiError": "Erreur API survenue",
+      "networkError": "Erreur réseau",
+      "serverError": "Erreur serveur",
+      "timeout": "Délai d'attente dépassé",
+      "rateLimit": "Limite de taux atteinte",
+      "unauthorized": "Non autorisé",
+      "forbidden": "Accès refusé",
+      "notFound": "Non trouvé",
+      "validationError": "Erreur de validation"
+    },
+    "success": {
+      "analysisStarted": "Analyse démarrée",
+      "analysisCompleted": "Analyse terminée",
+      "dataSaved": "Données sauvegardées",
+      "settingsUpdated": "Paramètres mis à jour",
+      "exportCompleted": "Export terminé"
+    }
+  },
+  "metadata": {
+    "title": "yourank.ai - Plateforme d'analyse SEO",
+    "description": "Plateforme d'analyse SEO tout-en-un avec des insights alimentés par l'IA",
+    "keywords": "SEO, Analyse, Mots-clés, SERP, IA, Marketing"
+  },
+  "language": {
+    "de": "Allemand",
+    "en": "Anglais",
+    "es": "Espagnol",
+    "fr": "Français",
+    "switchLanguage": "Changer de langue",
+    "currentLanguage": "Langue actuelle"
+  }
+}

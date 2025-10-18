@@ -9,6 +9,7 @@ import {
 } from '@/lib/utils/theme-helpers';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, TrendingDown, Minus, Calendar, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface HistoricalVolumeChartProps {
   data: any[];
@@ -25,6 +26,8 @@ export function HistoricalVolumeChart({
   peakMonth, 
   loading = false 
 }: HistoricalVolumeChartProps) {
+  const t = useTranslations('keywords');
+  
   if (loading) {
     return (
       <GlassCard className="p-6">
@@ -38,7 +41,7 @@ export function HistoricalVolumeChart({
           >
             <TrendingUp className="h-5 w-5" style={{ color: '#34A7AD' }} />
           </div>
-          <h3 className="text-foreground">Historical Volume Trends</h3>
+          <h3 className="text-foreground">{t('historicalVolumeTrends')}</h3>
         </div>
         <div className="h-64 bg-white/20 dark:bg-white/10 animate-pulse rounded-xl"></div>
       </GlassCard>

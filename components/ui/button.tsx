@@ -11,8 +11,8 @@ const buttonVariants = cva(
       variant: {
         default: "text-white font-medium transition-all duration-300 hover:opacity-90",
         destructive: "",
-        outline: "glass-button",
-        secondary: "glass-button",
+        outline: "glass-button text-foreground hover:bg-white/20 dark:hover:bg-white/10",
+        secondary: "glass-button text-foreground hover:bg-white/20 dark:hover:bg-white/10",
         ghost: "backdrop-blur-sm transition-all duration-300 text-foreground hover:bg-white/20 dark:hover:bg-white/10",
         link: "underline-offset-4 hover:underline transition-colors duration-300",
       },
@@ -45,7 +45,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         return {
           background: 'linear-gradient(145deg, #34A7AD, #5ED2D9)',
           color: '#FFFFFF',
-          boxShadow: '0 4px 12px rgba(52, 167, 173, 0.3)',
+          boxShadow: '0 4px 12px rgba(52, 167, 173, 0.4), 0 0 20px rgba(52, 167, 173, 0.2)',
+          border: '2px solid rgba(52, 167, 173, 0.6)',
           ...style
         }
       }
@@ -53,7 +54,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         return {
           background: 'linear-gradient(145deg, #DC2626, #EF4444)',
           color: '#FFFFFF',
-          boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)',
+          boxShadow: '0 4px 12px rgba(220, 38, 38, 0.4), 0 0 20px rgba(220, 38, 38, 0.2)',
+          border: '2px solid rgba(220, 38, 38, 0.6)',
           ...style
         }
       }

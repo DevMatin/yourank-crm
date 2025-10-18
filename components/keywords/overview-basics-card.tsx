@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, DollarSign, Target, BarChart3 } from 'lucide-react';
+import { TrendingUp, DollarSign, Target, BarChart3, AlertTriangle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface KeywordBasics {
   keyword: string;
@@ -16,13 +17,15 @@ interface OverviewBasicsCardProps {
 }
 
 export function OverviewBasicsCard({ data, loading = false }: OverviewBasicsCardProps) {
+  const t = useTranslations('keywords');
+  
   if (loading || !data) {
     return (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
-            Keyword Basics
+            {t('keywordBasics')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -53,8 +56,14 @@ export function OverviewBasicsCard({ data, loading = false }: OverviewBasicsCard
 
   const formatDifficulty = (num: number | undefined) => {
     if (!num) return 'N/A';
-    // DataForSEO returns difficulty as percentage (0-100), just round it
     return `${Math.round(num)}%`;
+  };
+
+  const getDataStatus = (value: any) => {
+    if (value === null || value === undefined) {
+      return { status: 'missing', color: 'text-orange-500', icon: AlertTriangle };
+    }
+    return { status: 'available', color: 'text-foreground', icon: null };
   };
 
   const getTrendIcon = (trend: number | undefined) => {
@@ -76,7 +85,7 @@ export function OverviewBasicsCard({ data, loading = false }: OverviewBasicsCard
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <BarChart3 className="h-5 w-5" />
-          Keyword Basics
+          {t('keywordBasics')}
         </CardTitle>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-sm">
@@ -90,13 +99,16 @@ export function OverviewBasicsCard({ data, loading = false }: OverviewBasicsCard
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-blue-500 dark:text-blue-400" />
-              <span className="text-sm font-medium text-muted-foreground">Search Volume</span>
+              <span className="text-sm font-medium text-muted-foreground">{t('searchVolume')}</span>
+              {getDataStatus(data.searchVolume).status === 'missing' && (
+                <AlertTriangle className="h-3 w-3 text-orange-500" />
+              )}
             </div>
-            <div className="text-2xl font-bold">
+            <div className={`text-2xl font-bold ${getDataStatus(data.searchVolume).color}`}>
               {formatNumber(data.searchVolume)}
             </div>
             <div className="text-xs text-muted-foreground">
-              Monatliche Suchanfragen
+              {t('monthlySearches')}
             </div>
           </div>
 
@@ -104,13 +116,16 @@ export function OverviewBasicsCard({ data, loading = false }: OverviewBasicsCard
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-green-500" />
-              <span className="text-sm font-medium text-muted-foreground">CPC</span>
+              <span className="text-sm font-medium text-muted-foreground">{t('cpc')}</span>
+              {getDataStatus(data.cpc).status === 'missing' && (
+                <AlertTriangle className="h-3 w-3 text-orange-500" />
+              )}
             </div>
-            <div className="text-2xl font-bold">
+            <div className={`text-2xl font-bold ${getDataStatus(data.cpc).color}`}>
               {formatCurrency(data.cpc)}
             </div>
             <div className="text-xs text-muted-foreground">
-              Cost Per Click
+              {t('costPerClick')}
             </div>
           </div>
 
@@ -118,13 +133,16 @@ export function OverviewBasicsCard({ data, loading = false }: OverviewBasicsCard
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Target className="h-4 w-4 text-orange-500" />
-              <span className="text-sm font-medium text-muted-foreground">Difficulty</span>
+              <span className="text-sm font-medium text-muted-foreground">{t('difficulty')}</span>
+              {getDataStatus(data.difficulty).status === 'missing' && (
+                <AlertTriangle className="h-3 w-3 text-orange-500" />
+              )}
             </div>
-            <div className="text-2xl font-bold">
+            <div className={`text-2xl font-bold ${getDataStatus(data.difficulty).color}`}>
               {formatDifficulty(data.difficulty)}
             </div>
             <div className="text-xs text-muted-foreground">
-              Ranking-Schwierigkeit
+              {t('rankingDifficulty')}
             </div>
           </div>
 
@@ -132,13 +150,16 @@ export function OverviewBasicsCard({ data, loading = false }: OverviewBasicsCard
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               {getTrendIcon(data.trend)}
-              <span className="text-sm font-medium text-muted-foreground">Trend</span>
+              <span className="text-sm font-medium text-muted-foreground">{t('trend')}</span>
+              {getDataStatus(data.trend).status === 'missing' && (
+                <AlertTriangle className="h-3 w-3 text-orange-500" />
+              )}
             </div>
             <div className={`text-2xl font-bold ${getTrendColor(data.trend)}`}>
               {data.trend ? `${data.trend > 0 ? '+' : ''}${data.trend.toFixed(1)}%` : 'N/A'}
             </div>
             <div className="text-xs text-muted-foreground">
-              Letzte 12 Monate
+              {t('last12Months')}
             </div>
           </div>
         </div>
